@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div id="app" v-if="logged">
     <div id="nav">
       <vs-sidebar absolute v-model="showNav" open>
         <vs-sidebar-item id="my-account" to="/my-account">
@@ -32,16 +32,22 @@
       <router-view />
     </div>
   </div>
+  <Landing v-else />
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
+import Landing from "@/components/Landing.vue";
 
 @Component({
-  components: {},
+  components: { Landing },
 })
 export default class App extends Vue {
   showNav = true;
+
+  get logged(): boolean {
+    return this.$store.state.logged;
+  }
 }
 </script>
 
@@ -51,6 +57,7 @@ export default class App extends Vue {
 body {
   font-family: Roboto;
 }
+
 #center {
   margin-left: 300px;
 }

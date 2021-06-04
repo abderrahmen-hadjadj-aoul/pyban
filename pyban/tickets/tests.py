@@ -1,20 +1,21 @@
 from django.test import TestCase, Client
-from django.test.utils import setup_test_environment
 from django.urls import reverse
 import json
 
+
 class UserTests(TestCase):
 
-    # HELPERS
+    # HELPERS
 
-    def create_user(self, username, email, password):
+    def create_user(self, username, password):
         client = Client()
         payload = {
             "username": username,
-            "email": email,
             "password": password,
         }
-        response = client.post(reverse("tickets:users"), payload)
+        response = client.post(reverse("tickets:users"),
+                               json.dumps(payload),
+                               content_type="application/json")
         user = json.loads(response.content)
         return (response, user)
 
@@ -37,21 +38,18 @@ class UserTests(TestCase):
         A user should be created
         """
         username = "Tom"
-        email = "test@gmail.com"
         password = "123"
-        (response, user) = self.create_user(username, email, password)
+        (response, user) = self.create_user(username, password)
         self.assertIs(response.status_code, 201)
         self.assertEqual(user['username'], username)
-        self.assertEqual(user['email'], email)
 
     def test_create_user_witout_username(self):
         """
         A user created without username should return an error
         """
         username = ""
-        email = "test@gmail.com"
         password = "123"
-        (response, data) = self.create_user(username, email, password)
+        (response, data) = self.create_user(username, password)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(data['message'], "Username must be set")
 
@@ -60,13 +58,11 @@ class UserTests(TestCase):
         A user created twice should return an error
         """
         username = "Tom"
-        email = "test@gmail.com"
         password = "123"
-        (response, user) = self.create_user(username, email, password)
+        (response, user) = self.create_user(username, password)
         self.assertIs(response.status_code, 201)
         self.assertEqual(user['username'], username)
-        self.assertEqual(user['email'], email)
-        (response, data) = self.create_user(username, email, password)
+        (response, data) = self.create_user(username, password)
         self.assertEqual(data['message'], "User already exists")
 
     def test_create_then_get_user(self):
@@ -74,14 +70,12 @@ class UserTests(TestCase):
         A user should be created then get
         """
         username = "Tom2"
-        email = "test2@gmail.com"
         password = "1232"
-        (response, created_user) = self.create_user(username, email, password)
+        (response, created_user) = self.create_user(username, password)
         id = created_user['id']
         (response, user) = self.get_user(id)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(user['username'], username)
-        self.assertEqual(user['email'], email)
 
     def test_get_user_not_exist(self):
         """
@@ -96,11 +90,9 @@ class UserTests(TestCase):
         Should get users
         """
         username = "Tom3"
-        email = "test3@gmail.com"
         password = "1233"
-        (response, created_user) = self.create_user(username, email, password)
+        (response, created_user) = self.create_user(username, password)
         (response, data) = self.get_users()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(data['users']), 1)
         self.assertEqual(data['users'][0]['username'], username)
-        self.assertEqual(data['users'][0]['email'], email)
