@@ -11,6 +11,7 @@ describe("Landing", () => {
   beforeEach(() => {
     actions = {
       register: jest.fn(),
+      login: jest.fn(),
     };
     store = new Vuex.Store({
       actions,
@@ -19,9 +20,15 @@ describe("Landing", () => {
 
   it("should create an account", () => {
     const wrapper = mount(Landing, { store });
-    expect(wrapper.get("#create-account").text()).toMatch("Create account");
     const button = wrapper.get("#create-account");
     button.trigger("click");
     expect(actions.register).toHaveBeenCalled();
+  });
+
+  it("should login", async () => {
+    const wrapper = mount(Landing, { store });
+    const button = wrapper.get("#login");
+    await button.trigger("click");
+    expect(actions.login).toHaveBeenCalled();
   });
 });

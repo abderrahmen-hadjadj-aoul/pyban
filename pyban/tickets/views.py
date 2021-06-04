@@ -1,7 +1,10 @@
 from django.http import JsonResponse
 from django.contrib.auth.models import User
 from django.db import IntegrityError
+from django.contrib.auth import authenticate, login
 import json
+
+# LOGIN
 
 
 def users(request):
@@ -43,3 +46,20 @@ def users_post(request):
     except IntegrityError:
         body = {"message": "User already exists"}
         return JsonResponse(body, status=400)
+
+
+# LOGIN
+
+
+def user_login(request):
+    credentials = json.loads(request.body)
+    username = credentials['username']
+    password = credentials['password']
+    user = authenticate(username=username, password=password)
+    if user is not None:
+        login(request, user)
+        body = {"id": user.id, "username": username}
+        return JsonResponse(body, status=200)
+    else:
+        body = {"message": "Wrong credentials"}
+        return JsonResponse(body, status=403)

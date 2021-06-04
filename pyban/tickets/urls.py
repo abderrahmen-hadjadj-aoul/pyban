@@ -6,4 +6,5 @@ app_name = "tickets"
 urlpatterns = [
     path('users', views.users, name='users'),
     path('users/<int:user_id>', views.users_get_one, name='user'),
+    path('login', views.user_login, name='login'),
 ]

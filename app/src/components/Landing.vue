@@ -2,18 +2,28 @@
   <div class="landing">
     <form>
       <h1>Login</h1>
+      <vs-alert
+        id="register-alert"
+        v-if="messageLogin.display"
+        :color="messageLogin.type"
+        :key="messageLogin.type"
+      >
+        {{ messageLogin.text }}
+      </vs-alert>
       <vs-input
+        id="login-username"
         v-model="credentials.username"
         placeholder="Username"
         :border="true"
       />
       <vs-input
+        id="login-password"
         type="password"
         v-model="credentials.password"
         placeholder="Password"
         :border="true"
       />
-      <vs-button @click.prevent="login"> Login </vs-button>
+      <vs-button id="login" @click.prevent="login"> Login </vs-button>
     </form>
     <form>
       <h1>Create an account</h1>
@@ -93,8 +103,15 @@ export default class Landing extends Vue {
   loading_ = false;
   loadingRef: any = null;
 
-  login(): void {
-    this.$store.dispatch("login", this.credentials);
+  async login(): void {
+    try {
+      await this.$store.dispatch("login", this.credentials);
+    } catch (e) {
+      console.error("login error", e);
+      this.messageLogin.display = true;
+      this.messageLogin.text = e.message;
+      this.messageLogin.type = "danger";
+    }
   }
 
   async create(): void {

@@ -31,6 +31,18 @@ class UserTests(TestCase):
         data = json.loads(response.content)
         return (response, data)
 
+    def login(self, username, password):
+        client = Client()
+        payload = {
+            "username": username,
+            "password": password,
+        }
+        response = client.post(reverse("tickets:login"),
+                               json.dumps(payload),
+                               content_type="application/json")
+        user = json.loads(response.content)
+        return (response, user)
+
     # TESTS
 
     def test_create_user(self):
@@ -96,3 +108,38 @@ class UserTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(data['users']), 1)
         self.assertEqual(data['users'][0]['username'], username)
+
+    def test_login(self):
+        """
+        Should log properly with right credentials
+        """
+        username = "Tom3"
+        password = "1233"
+        (response, created_user) = self.create_user(username, password)
+        id = created_user["id"]
+        (response, logged_user) = self.login(username, password)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(logged_user["id"], id)
+        self.assertEqual(logged_user["username"], username)
+
+    def test_login_wrong_username(self):
+        """
+        Should return an error for wrong credentials
+        """
+        username = "Tom3"
+        password = "1233"
+        (response, created_user) = self.create_user(username, password)
+        (response, data) = self.login(username + "x", password + "0")
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(data["message"], "Wrong credentials")
+
+    def test_login_wrong_password(self):
+        """
+        Should return an error for wrong credentials
+        """
+        username = "Tom3"
+        password = "1233"
+        (response, created_user) = self.create_user(username, password)
+        (response, data) = self.login(username, password + "0")
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(data["message"], "Wrong credentials")

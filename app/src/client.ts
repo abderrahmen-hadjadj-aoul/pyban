@@ -19,4 +19,14 @@ export default class Client {
       throw new Error(data.message);
     }
   }
+
+  async login(credentials: any): Promise<any> {
+    try {
+      const res = await this.instance.post("/tickets/login", credentials);
+      return res;
+    } catch (e) {
+      const data = e.response.data;
+      throw new Error(data.message);
+    }
+  }
 }
