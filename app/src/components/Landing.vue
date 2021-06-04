@@ -103,7 +103,7 @@ export default class Landing extends Vue {
   loading_ = false;
   loadingRef: any = null;
 
-  async login(): void {
+  async login(): Promise<void> {
     try {
       await this.$store.dispatch("login", this.credentials);
     } catch (e) {
@@ -114,7 +114,7 @@ export default class Landing extends Vue {
     }
   }
 
-  async create(): void {
+  async create(): Promise<void> {
     try {
       this.loading = true;
       const response = await this.$store.dispatch("register", this.register);
