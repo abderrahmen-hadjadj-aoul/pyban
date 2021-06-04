@@ -44,7 +44,7 @@ describe("Test general features", () => {
     cy.contains("h1", "Home").should("be.visible");
   });
 
-  it.only("Login wrong credentials", () => {
+  it("Login wrong credentials", () => {
     cy.visit("/");
     const username = "user-" + Date.now();
     const password = "123";
