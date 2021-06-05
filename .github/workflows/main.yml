@@ -59,7 +59,7 @@ jobs:
       working-directory: ./app
       run: |
         python ../pyban/manage.py migrate
-        python ../pyban/manage.py runserver
-        sleep 5s
+        python ../pyban/manage.py runserver &
+        sleep 5
         npm run test:e2e:headless
         pkill -f runserver
