@@ -1,11 +1,12 @@
 import Vue from "vue";
 import Vuex from "vuex";
+import BoardModel from "@/lib/Board";
+import Client from "../client";
 
 Vue.use(Vuex);
-import Client from "../client";
 const client = new Client();
 
-const boards: any[] = [];
+const boards: BoardModel[] = [];
 
 export default new Vuex.Store({
   state: {

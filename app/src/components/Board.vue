@@ -16,13 +16,14 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
+import BoardModel from "@/lib/Board";
 
 @Component({
   components: {},
 })
 export default class Board extends Vue {
-  @Prop()
-  board;
+  @Prop({ default: null })
+  board: BoardModel | null = null;
 }
 </script>
 

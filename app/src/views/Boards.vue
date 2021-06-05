@@ -61,6 +61,7 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import Board from "@/components/Board.vue";
+import BoardModel from "@/lib/Board";
 
 @Component({
   components: { Board },
@@ -68,9 +69,9 @@ import Board from "@/components/Board.vue";
 export default class Boards extends Vue {
   dialogOpened = false;
   boardName = "";
-  board: any = null;
+  board: BoardModel | null = null;
 
-  async mounted(): void {
+  async mounted(): Promise<void> {
     this.$store.dispatch("getBoards");
   }
 
@@ -106,11 +107,11 @@ export default class Boards extends Vue {
     loading.close();
   }
 
-  get boards(): any[] {
+  get boards(): BoardModel[] {
     return this.$store.state.boards;
   }
 
-  openBoard(board: any): void {
+  openBoard(board: BoardModel): void {
     this.board = board;
   }
 

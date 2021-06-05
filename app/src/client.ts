@@ -1,8 +1,18 @@
-import axios from "axios";
+import axios, { AxiosInstance, AxiosResponse } from "axios";
+import BoardModel from "@/lib/Board";
+
+interface Headers {
+  Authorization?: string;
+}
+
+interface Credentials {
+  username: string;
+  password: string;
+}
 
 export default class Client {
   base = "http://localhost:8000/";
-  instance: any;
+  instance: AxiosInstance;
   token: string | null = null;
 
   constructor() {
@@ -10,11 +20,19 @@ export default class Client {
     if (token) {
       this.token = token;
     }
+    const headers: Headers = {};
+    if (this.token) {
+      headers.Authorization = "Token " + this.token;
+    }
+    this.instance = axios.create({
+      baseURL: this.base,
+      headers,
+    });
     this.initInstance();
   }
 
   initInstance(): void {
-    const headers: any = {};
+    const headers: Headers = {};
     if (this.token) {
       headers.Authorization = "Token " + this.token;
     }
@@ -27,7 +45,7 @@ export default class Client {
 
   // USERS
 
-  async register(credentials: any): Promise<any> {
+  async register(credentials: Credentials): Promise<AxiosResponse> {
     try {
       const res = await this.instance.post("/tickets/users", credentials);
       return res;
@@ -37,7 +55,7 @@ export default class Client {
     }
   }
 
-  async login(credentials: any): Promise<any> {
+  async login(credentials: Credentials): Promise<AxiosResponse> {
     try {
       const res = await this.instance.post(
         "/tickets/api-token-auth",
@@ -53,7 +71,7 @@ export default class Client {
     }
   }
 
-  async getUserInfo(): Promise<any> {
+  async getUserInfo(): Promise<AxiosResponse> {
     try {
       const res = await this.instance.get("/tickets/users/me");
       return res;
@@ -65,7 +83,7 @@ export default class Client {
 
   // BOARDS
 
-  async createBoard(board: any): Promise<any> {
+  async createBoard(board: BoardModel): Promise<AxiosResponse> {
     try {
       const res = await this.instance.post("/tickets/boards", board);
       return res;
@@ -75,7 +93,7 @@ export default class Client {
     }
   }
 
-  async getBoards(): Promise<any> {
+  async getBoards(): Promise<AxiosResponse> {
     try {
       const res = await this.instance.get("/tickets/boards");
       return res;

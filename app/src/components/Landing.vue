@@ -101,6 +101,7 @@ export default class Landing extends Vue {
     text: "",
   };
   loading_ = false;
+  // eslint-disable-next-line
   loadingRef: any = null;
 
   async login(): Promise<void> {
