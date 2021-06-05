@@ -8,8 +8,8 @@ from django.db import IntegrityError
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from rest_framework import status
-from .models import Board
-from .serializers import BoardSerializer
+from .models import Board, Ticket
+from .serializers import BoardSerializer, TicketSerializer
 
 User = get_user_model()
 
@@ -88,7 +88,7 @@ def user_login(request):
 
 class BoardList(APIView):
     """
-    List all snippets, or create a new snippet.
+    List all boards, or create a new board.
     """
     permission_classes = (IsAuthenticated, )
 
@@ -120,4 +120,71 @@ class BoardDetail(APIView):
                 return Response(status=status.HTTP_401_UNAUTHORIZED)
         except Exception:
             body = {"message": "Board does not exist"}
+            return Response(body, status=status.HTTP_404_NOT_FOUND)
+
+
+# TICKETS
+
+
+class TicketList(APIView):
+    """
+    List all tickets, or create a new tickets.
+    """
+    permission_classes = (IsAuthenticated, )
+
+    def get(self, request, format=None):
+        boardid = request.query_params.get("boardid")
+        board = Board.objects.get(pk=boardid)
+        if not request.user.canView(board):
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        tickets = Ticket.objects.filter(board=board)
+        serializer = TicketSerializer(tickets, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, format=None):
+        data = request.data
+        data["owner"] = request.user.id
+        board = Board.objects.get(pk=data["board"])
+        if not request.user.canEdit(board):
+            error = {"error": "You don't have access to the board"}
+            return Response(error, status=status.HTTP_401_UNAUTHORIZED)
+        serializer = TicketSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TicketDetail(APIView):
+    permission_classes = (IsAuthenticated, )
+
+    def get(self, request, pk):
+        try:
+            ticket = Ticket.objects.get(pk=pk)
+            if request.user.canView(ticket):
+                serializer = TicketSerializer(ticket)
+                return Response(serializer.data)
+            else:
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
+        except Exception:
+            body = {"message": "Ticket does not exist"}
+            return Response(body, status=status.HTTP_404_NOT_FOUND)
+
+    def patch(self, request, pk):
+        try:
+            ticket = Ticket.objects.get(pk=pk)
+            data = request.data
+            if request.user.canView(ticket):
+                if "title" in data:
+                    ticket.title = data["title"]
+                if "description" in data:
+                    ticket.description = request.data["description"]
+                ticket.save()
+                serializer = TicketSerializer(ticket)
+                return Response(serializer.data)
+            else:
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
+        except Exception as e:
+            print("ERROR", e)
+            body = {"message": "Ticket does not exist"}
             return Response(body, status=status.HTTP_404_NOT_FOUND)

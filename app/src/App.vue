@@ -1,7 +1,7 @@
 <template>
   <div id="app" v-if="logged">
     <div id="nav">
-      <vs-sidebar absolute v-model="showNav" open>
+      <vs-sidebar v-model="showNav" open>
         <vs-sidebar-item id="my-account" to="/my-account">
           <template #icon>
             <i class="bx bx-user"></i>

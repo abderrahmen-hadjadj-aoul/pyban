@@ -304,3 +304,158 @@ class GeneralTests(TestCase):
         self.assertEqual(len(boards), 5)
         for n in range(number_of_boards):
             self.assertIn(created_boards[n][1], boards)
+
+    # TICKETS
+
+    def test_create_ticket(self):
+        # Create user
+        username = "Tom"
+        password = "123"
+        (response, created_user) = self.create_user(username, password)
+        (response, data) = self.get_token(username, password)
+        token = data["token"]
+        headers = {"HTTP_AUTHORIZATION": "Token " + token}
+        # Create board
+        name = "Board Name for tickets"
+        (response, created_board) = self.create_board(name, headers=headers)
+        self.assertEqual(response.status_code, 201)
+        boardid = created_board["id"]
+        # Create ticket
+        payload = {
+            "title": "Ticket Title",
+            "description": "Ticket Description",
+            "board": boardid,
+        }
+        response = self.client.post(reverse("tickets:tickets"),
+                                    json.dumps(payload),
+                                    content_type="application/json",
+                                    **headers)
+        ticket = json.loads(response.content)
+        ticketid = ticket["id"]
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(ticket["title"], payload["title"])
+        self.assertEqual(ticket["description"], payload["description"])
+        # Get Ticket
+        response = self.client.get(
+            reverse("tickets:ticket", kwargs={"pk": ticketid}), **headers)
+        ticket = json.loads(response.content)
+        self.assertEqual(ticket["title"], payload["title"])
+        self.assertEqual(ticket["description"], payload["description"])
+
+    def test_create_ticket_wrong_board(self):
+        # Create user
+        username = "Tom"
+        password = "123"
+        (response, created_user) = self.create_user(username, password)
+        (response, data) = self.get_token(username, password)
+        token = data["token"]
+        headers = {"HTTP_AUTHORIZATION": "Token " + token}
+        username2 = "Tom--"
+        password2 = "123"
+        (response, created_user) = self.create_user(username2, password2)
+        (response, data) = self.get_token(username2, password2)
+        token2 = data["token"]
+        headers2 = {"HTTP_AUTHORIZATION": "Token " + token2}
+        # Create board
+        name = "Board Name for tickets"
+        (response, created_board) = self.create_board(name, headers=headers)
+        self.assertEqual(response.status_code, 201)
+        boardid = created_board["id"]
+        # Create ticket
+        payload = {
+            "title": "Ticket Title",
+            "description": "Ticket Description",
+            "board": boardid,
+        }
+        response = self.client.post(reverse("tickets:tickets"),
+                                    json.dumps(payload),
+                                    content_type="application/json",
+                                    **headers2)
+        error = json.loads(response.content)
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(error["error"], "You don't have access to the board")
+
+    def test_create_and_ticket_list(self):
+        # Create user
+        username = "Tom"
+        password = "123"
+        (response, created_user) = self.create_user(username, password)
+        # Get token
+        (response, data) = self.get_token(username, password)
+        token = data["token"]
+        headers = {"HTTP_AUTHORIZATION": "Token " + token}
+        # Create board
+        name = "Board Name for tickets"
+        (response, created_board) = self.create_board(name, headers=headers)
+        self.assertEqual(response.status_code, 201)
+        boardid = created_board["id"]
+        # Create ticket
+        created_tickets = []
+        number_of_tickets = 5
+        for n in range(number_of_tickets):
+            payload = {
+                "title": "Ticket Title" + str(n),
+                "description": "Ticket Description" + str(n),
+                "board": boardid,
+            }
+            response = self.client.post(reverse("tickets:tickets"),
+                                        json.dumps(payload),
+                                        content_type="application/json",
+                                        **headers)
+            ticket_created = json.loads(response.content)
+            created_tickets.append((response, ticket_created))
+        url = reverse("tickets:tickets") + "?boardid=" + str(boardid)
+        response = self.client.get(url, **headers)
+        tickets = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(tickets), number_of_tickets)
+        for n in range(number_of_tickets):
+            self.assertIn(created_tickets[n][1], tickets)
+
+    def test_update_ticket(self):
+        # Create user
+        username = "Tom"
+        password = "123"
+        (response, created_user) = self.create_user(username, password)
+        (response, data) = self.get_token(username, password)
+        token = data["token"]
+        headers = {"HTTP_AUTHORIZATION": "Token " + token}
+        # Create board
+        name = "Board Name for tickets"
+        (response, created_board) = self.create_board(name, headers=headers)
+        boardid = created_board["id"]
+        # Create ticket
+        payload = {
+            "title": "Ticket Title",
+            "description": "Ticket Description",
+            "board": boardid,
+        }
+        response = self.client.post(reverse("tickets:tickets"),
+                                    json.dumps(payload),
+                                    content_type="application/json",
+                                    **headers)
+        ticket = json.loads(response.content)
+        ticketid = ticket["id"]
+        # Update Ticket
+        newTitle = "New title"
+        newDescription = "New description"
+        payload = {
+            "title": newTitle,
+            "description": newDescription,
+        }
+        response = self.client.patch(reverse("tickets:ticket",
+                                             kwargs={"pk": ticketid}),
+                                     payload,
+                                     content_type="application/json",
+                                     **headers)
+        ticket = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ticket["title"], payload["title"])
+        self.assertEqual(ticket["description"], payload["description"])
+        # Get Ticket
+        response = self.client.get(
+            reverse("tickets:ticket", kwargs={"pk": ticketid}), **headers)
+        ticket = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ticket["title"], payload["title"])
+        self.assertEqual(ticket["description"], payload["description"])

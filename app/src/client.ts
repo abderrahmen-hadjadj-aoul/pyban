@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 import BoardModel from "@/lib/Board";
+import TicketModel from "@/lib/Ticket";
 
 interface Headers {
   Authorization?: string;
@@ -8,6 +9,16 @@ interface Headers {
 interface Credentials {
   username: string;
   password: string;
+}
+
+interface TicketPatch {
+  title?: string;
+  description?: string;
+}
+
+interface TicketPatchPayload {
+  id: string;
+  patch: TicketPatch;
 }
 
 export default class Client {
@@ -96,6 +107,43 @@ export default class Client {
   async getBoards(): Promise<AxiosResponse> {
     try {
       const res = await this.instance.get("/tickets/boards");
+      return res;
+    } catch (e) {
+      const data = e.response.data;
+      throw new Error(data.message);
+    }
+  }
+
+  // TICKETS
+
+  async loadTickets(board: BoardModel): Promise<AxiosResponse> {
+    try {
+      const res = await this.instance.get(
+        "/tickets/tickets?boardid=" + board.id
+      );
+      return res;
+    } catch (e) {
+      const data = e.response.data;
+      throw new Error(data.message);
+    }
+  }
+
+  async createTicket(ticket: TicketModel): Promise<AxiosResponse> {
+    try {
+      const res = await this.instance.post("/tickets/tickets", ticket);
+      return res;
+    } catch (e) {
+      const data = e.response.data;
+      throw new Error(data.message);
+    }
+  }
+
+  async updateTicket(payload: TicketPatchPayload): Promise<AxiosResponse> {
+    try {
+      const res = await this.instance.patch(
+        "/tickets/tickets/" + payload.id,
+        payload.patch
+      );
       return res;
     } catch (e) {
       const data = e.response.data;

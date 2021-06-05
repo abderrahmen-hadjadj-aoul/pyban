@@ -1,12 +1,23 @@
 import Vue from "vue";
 import Vuex from "vuex";
 import BoardModel from "@/lib/Board";
+import TicketModel from "@/lib/Ticket";
 import Client from "../client";
 
 Vue.use(Vuex);
 const client = new Client();
 
 const boards: BoardModel[] = [];
+
+interface TicketPatch {
+  title?: string;
+  description?: string;
+}
+
+interface TicketPatchPayload {
+  id: string;
+  patch: TicketPatch;
+}
 
 export default new Vuex.Store({
   state: {
@@ -16,6 +27,7 @@ export default new Vuex.Store({
     boards,
   },
   mutations: {
+    // USER
     setUser(state, user) {
       state.logged = true;
       state.user = user;
@@ -23,11 +35,30 @@ export default new Vuex.Store({
     setToken(state, token) {
       state.token = token;
     },
+    // BOARDS
     addBoard(state, board) {
       state.boards.push(board);
     },
     setBoards(state, boards) {
-      state.boards = boards;
+      state.boards = boards.map((board: BoardModel) => new BoardModel(board));
+    },
+    // TICKETS
+    addTicket(state, ticket) {
+      console.log("ticket", ticket);
+      const board = state.boards.find((board) => board.id === ticket.board);
+      console.log("add ticket in board", board);
+      console.log("searching ticket", ticket.id);
+      if (board) {
+        const index = board.tickets
+          .map((ticket) => ticket.id)
+          .indexOf(ticket.id);
+        console.log("index", index);
+        if (index > -1) {
+          board.tickets[index] = ticket;
+        } else {
+          board.tickets.push(ticket);
+        }
+      }
     },
   },
   actions: {
@@ -61,6 +92,30 @@ export default new Vuex.Store({
       const boards = res.data;
       context.commit("setBoards", boards);
       return boards;
+    },
+    // TICKET
+    async loadTickets(context, board) {
+      console.log("loadTickets", board);
+      const res = await client.loadTickets(board);
+      const tickets = res.data.map(
+        (ticket: TicketModel) => new TicketModel(ticket)
+      );
+
+      tickets.forEach((ticket: TicketModel) => {
+        context.commit("addTicket", ticket);
+      });
+      return tickets;
+    },
+    async createTicket(context, ticket) {
+      console.log("createTicket", ticket);
+      const res = await client.createTicket(ticket);
+      const createdTicket = new TicketModel(res.data);
+      context.commit("addTicket", createdTicket);
+      return createdTicket;
+    },
+    async updateTicket(context, payload: TicketPatchPayload) {
+      console.log("updateTicket", payload);
+      await client.updateTicket(payload);
     },
   },
   modules: {},
