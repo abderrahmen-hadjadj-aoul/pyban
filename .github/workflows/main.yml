@@ -58,7 +58,8 @@ jobs:
     - name: Run e2e tests
       working-directory: ./app
       run: |
-        python ../manage.py runserver &
+        python ../pyban/manage.py migrate
+        python ../pyban/manage.py runserver &
         sleep 5s
         npm run test:e2e:headless
         pkill -f runserver
