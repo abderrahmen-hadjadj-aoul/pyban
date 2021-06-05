@@ -109,7 +109,7 @@ export default class Landing extends Vue {
     } catch (e) {
       console.error("login error", e);
       this.messageLogin.display = true;
-      this.messageLogin.text = e.message;
+      this.messageLogin.text = "Wrong credentials";
       this.messageLogin.type = "danger";
     }
   }
