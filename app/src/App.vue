@@ -6,7 +6,7 @@
           <template #icon>
             <i class="bx bx-user"></i>
           </template>
-          My account
+          My account ({{ username }})
         </vs-sidebar-item>
         <vs-sidebar-item id="home" to="/">
           <template #icon>
@@ -14,7 +14,7 @@
           </template>
           Home
         </vs-sidebar-item>
-        <vs-sidebar-item id="boards" to="/boards">
+        <vs-sidebar-item data-nav="nav-boards" id="nav-boards" to="/boards">
           <template #icon>
             <i class="bx bx-columns"></i>
           </template>
@@ -47,6 +47,14 @@ export default class App extends Vue {
 
   get logged(): boolean {
     return this.$store.state.logged;
+  }
+
+  get user(): any {
+    return this.$store.state.user;
+  }
+
+  get username(): string {
+    return this.user ? this.user.username : "";
   }
 }
 </script>

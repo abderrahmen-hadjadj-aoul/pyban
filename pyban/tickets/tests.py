@@ -1,50 +1,51 @@
+from django.db import transaction
 from django.test import TestCase, Client
 from django.urls import reverse
+from .models import User
 import json
 
 
-class UserTests(TestCase):
+class GeneralTests(TestCase):
+    def setUp(self):
+        self.client = Client()
 
     # HELPERS
 
     def create_user(self, username, password):
-        client = Client()
         payload = {
             "username": username,
             "password": password,
         }
-        response = client.post(reverse("tickets:users"),
-                               json.dumps(payload),
-                               content_type="application/json")
+        response = self.client.post(reverse("tickets:users"),
+                                    json.dumps(payload),
+                                    content_type="application/json")
         user = json.loads(response.content)
         return (response, user)
 
     def get_user(self, id):
-        client = Client()
-        response = client.get(reverse("tickets:user", kwargs={"user_id": id}))
+        response = self.client.get(
+            reverse("tickets:user", kwargs={"user_id": id}))
         user = json.loads(response.content)
         return (response, user)
 
     def get_users(self):
-        client = Client()
-        response = client.get(reverse("tickets:users"))
+        response = self.client.get(reverse("tickets:users"))
         data = json.loads(response.content)
         return (response, data)
 
-    def login(self, username, password):
-        client = Client()
+    def get_token(self, username, password):
         payload = {
             "username": username,
             "password": password,
         }
-        response = client.post(reverse("tickets:login"),
-                               json.dumps(payload),
-                               content_type="application/json")
-        user = json.loads(response.content)
-        return (response, user)
+        response = self.client.post(reverse("tickets:api_token_auth"),
+                                    json.dumps(payload),
+                                    follow=True,
+                                    content_type="application/json")
+        data = json.loads(response.content)
+        return (response, data)
 
-    # TESTS
-
+    # USERS
     def test_create_user(self):
         """
         A user should be created
@@ -109,18 +110,16 @@ class UserTests(TestCase):
         self.assertEqual(len(data['users']), 1)
         self.assertEqual(data['users'][0]['username'], username)
 
-    def test_login(self):
+    def test_get_token(self):
         """
         Should log properly with right credentials
         """
         username = "Tom3"
         password = "1233"
         (response, created_user) = self.create_user(username, password)
-        id = created_user["id"]
-        (response, logged_user) = self.login(username, password)
+        (response, data) = self.get_token(username, password)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(logged_user["id"], id)
-        self.assertEqual(logged_user["username"], username)
+        self.assertIn("token", data)
 
     def test_login_wrong_username(self):
         """
@@ -129,9 +128,8 @@ class UserTests(TestCase):
         username = "Tom3"
         password = "1233"
         (response, created_user) = self.create_user(username, password)
-        (response, data) = self.login(username + "x", password + "0")
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(data["message"], "Wrong credentials")
+        (response, data) = self.get_token(username + "0", password)
+        self.assertEqual(response.status_code, 400)
 
     def test_login_wrong_password(self):
         """
@@ -140,6 +138,169 @@ class UserTests(TestCase):
         username = "Tom3"
         password = "1233"
         (response, created_user) = self.create_user(username, password)
-        (response, data) = self.login(username, password + "0")
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(data["message"], "Wrong credentials")
+        (response, data) = self.get_token(username, password + "0")
+        self.assertEqual(response.status_code, 400)
+
+    # BOARD
+
+    def create_board(self, name, headers={}):
+        payload = {
+            "name": name,
+        }
+        response = self.client.post(reverse("tickets:boards"),
+                                    json.dumps(payload),
+                                    content_type="application/json",
+                                    **headers)
+        board = json.loads(response.content)
+        return (response, board)
+
+    def get_board(self, board_id, headers={}):
+        response = self.client.get(
+            reverse("tickets:board", kwargs={"pk": board_id}), **headers)
+        board = {}
+        try:
+            board = json.loads(response.content)
+        except Exception:
+            pass
+        return (response, board)
+
+    def test_board_create(self):
+        """
+        Should create a board
+        """
+        username = "Tom"
+        password = "123"
+        (response, created_user) = self.create_user(username, password)
+        id = created_user["id"]
+        user = User.objects.get(pk=id)
+        name = "Board Name"
+        (response, data) = self.get_token(username, password)
+        token = data["token"]
+        headers = {"HTTP_AUTHORIZATION": "Token " + token}
+        (response, created_board) = self.create_board(name, headers=headers)
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(created_board["name"], name)
+
+    def test_board_create_then_get_it(self):
+        """
+        Should get the created board
+        """
+        # Create user
+        username = "Tom"
+        password = "123"
+        (response, created_user) = self.create_user(username, password)
+        userid = created_user["id"]
+        user = User.objects.get(pk=userid)
+        # Get token
+        (response, data) = self.get_token(username, password)
+        token = data["token"]
+        headers = {"HTTP_AUTHORIZATION": "Token " + token}
+        # Create board
+        name = "Board Name"
+        (response, created_board) = self.create_board(name, headers=headers)
+        self.assertEqual(response.status_code, 201)
+        boardid = created_board["id"]
+        # Get board
+        (response, board) = self.get_board(boardid, headers=headers)
+        self.assertEqual(board["id"], boardid)
+        self.assertEqual(board["name"], name)
+
+    def test_board_get_not_exist(self):
+        """
+        Should return error for board that does not exist
+        """
+        username = "Tom"
+        password = "123"
+        (response, created_user) = self.create_user(username, password)
+        userid = created_user["id"]
+        user = User.objects.get(pk=userid)
+        (response, data) = self.get_token(username, password)
+        token = data["token"]
+        headers = {"HTTP_AUTHORIZATION": "Token " + token}
+        boardid = 12346789
+        (response, board) = self.get_board(boardid, headers=headers)
+        self.assertEqual(response.status_code, 404)
+
+    def test_board_permission(self):
+        """
+        Should return error for no permission of board
+        """
+        # Create user
+        username = "Tom"
+        password = "123"
+        (response, created_user) = self.create_user(username, password)
+        username2 = "Tom--"
+        password2 = "123--"
+        (response, created_user2) = self.create_user(username2, password2)
+        # Get token
+        (response, data) = self.get_token(username, password)
+        token = data["token"]
+        headers = {"HTTP_AUTHORIZATION": "Token " + token}
+        (response2, data2) = self.get_token(username2, password2)
+        token2 = data2["token"]
+        headers2 = {"HTTP_AUTHORIZATION": "Token " + token2}
+        # Create board
+        name = "Board Name"
+        (response, created_board) = self.create_board(name, headers=headers)
+        self.assertEqual(response.status_code, 201)
+        boardid = created_board["id"]
+        # Get board
+        (response, board) = self.get_board(boardid, headers=headers2)
+        self.assertEqual(response.status_code, 401)
+
+    def test_get_board_list(self):
+        # Create user
+        username = "Tom"
+        password = "123"
+        (response, created_user) = self.create_user(username, password)
+        # Get token
+        (response, data) = self.get_token(username, password)
+        token = data["token"]
+        headers = {"HTTP_AUTHORIZATION": "Token " + token}
+        # Create boards
+        created_boards = []
+        number_of_boards = 5
+        for n in range(number_of_boards):
+            name = "Board Name" + str(n)
+            (response, created_board) = self.create_board(name,
+                                                          headers=headers)
+            created_boards.append((response, created_board))
+        response = self.client.get(reverse("tickets:boards"), **headers)
+        boards = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(boards), 5)
+        for n in range(number_of_boards):
+            self.assertIn(created_boards[n][1], boards)
+
+    def test_get_board_list_without_other_users_boards(self):
+        # Create user
+        username = "Tom"
+        password = "123"
+        (response, created_user) = self.create_user(username, password)
+        username2 = "Tom--"
+        password2 = "123--"
+        (response2, created_user2) = self.create_user(username2, password2)
+        # Get token
+        (response, data) = self.get_token(username, password)
+        token = data["token"]
+        headers = {"HTTP_AUTHORIZATION": "Token " + token}
+        (response2, data2) = self.get_token(username2, password2)
+        token2 = data2["token"]
+        headers2 = {"HTTP_AUTHORIZATION": "Token " + token2}
+        # Create boards
+        created_boards = []
+        number_of_boards = 5
+        for n in range(number_of_boards):
+            name = "Board Name" + str(n)
+            (response, created_board) = self.create_board(name,
+                                                          headers=headers)
+            created_boards.append((response, created_board))
+            name = "Board Name Other" + str(n)
+            (response, created_board) = self.create_board(name,
+                                                          headers=headers2)
+        response = self.client.get(reverse("tickets:boards"), **headers)
+        boards = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(boards), 5)
+        for n in range(number_of_boards):
+            self.assertIn(created_boards[n][1], boards)
