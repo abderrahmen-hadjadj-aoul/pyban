@@ -33,4 +33,4 @@ jobs:
       run: npm run test:unit
     - name: Run e2e tests
       working-directory: ./app
-      run: npm run test:2e2:headless
+      run: npm run test:e2e:headless
