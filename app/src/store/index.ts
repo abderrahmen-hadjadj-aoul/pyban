@@ -76,12 +76,25 @@ export default new Vuex.Store({
     },
     deleteTicket(state, { column, ticket }) {
       console.log("delete ticket", ticket);
+      if (!column) {
+        const board = state.boards.find((board) => board.id === ticket.board);
+        if (board) {
+          console.log("found board");
+          column = board.columns_list.find(
+            (column) => column.id === ticket.column
+          );
+        }
+      }
       if (column) {
-        const index = column.tickets
-          .map((ticket: TicketModel) => ticket.id)
-          .indexOf(ticket.id);
+        const index = column.tickets.indexOf(ticket.id);
         if (index > -1) {
           column.tickets.splice(index, 1);
+        }
+        const index2 = column.tickets_list
+          .map((ticket: TicketModel) => ticket.id)
+          .indexOf(ticket.id);
+        if (index2 > -1) {
+          column.tickets_list.splice(index2, 1);
         }
       }
     },
@@ -194,7 +207,7 @@ export default new Vuex.Store({
     async deleteTicket(context, ticket: TicketModel) {
       console.log("deleteTicket", ticket);
       await client.deleteTicket(ticket);
-      context.commit("deleteTicket", ticket);
+      context.commit("deleteTicket", { ticket });
     },
     // COLUMNS
     async addColumn(context, payload: ColumnAddPayload) {

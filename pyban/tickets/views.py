@@ -186,6 +186,8 @@ class TicketDetail(APIView):
             if request.user.canView(ticket):
                 if "title" in data:
                     ticket.title = data["title"]
+                if "column" in data:
+                    ticket.column = Column.objects.get(pk=data["column"])
                 if "description" in data:
                     ticket.description = request.data["description"]
                 ticket.save()
@@ -194,6 +196,7 @@ class TicketDetail(APIView):
             else:
                 return Response(status=status.HTTP_401_UNAUTHORIZED)
         except Exception as e:
+            print("ERROR", e)
             body = {"message": e}
             return Response(body, status=status.HTTP_404_NOT_FOUND)
 

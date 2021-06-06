@@ -78,7 +78,7 @@ export default class Boards extends Vue {
       console.log("board id is defined", board_id);
       console.log("board", this.$store.state.boards);
       const board = this.$store.state.boards.find(
-        (board) => "" + board.id === board_id
+        (board: BoardModel) => "" + board.id === board_id
       );
       if (board) {
         console.log("board found", board);

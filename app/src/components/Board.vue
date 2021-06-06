@@ -39,21 +39,38 @@
             <i class="bx bx-plus"></i>
           </vs-button>
         </div>
-        <ul>
-          <li
-            v-for="(ticket, index) in column.tickets_list"
-            :key="ticket.id"
-            :data-index="index"
-            @dblclick="openTicketDetailDialog(ticket)"
+        <draggable
+          class="list-group"
+          tag="ul"
+          v-model="column.tickets_list"
+          v-bind="dragOptions"
+          @change="onTicketChange($event, column)"
+          @start="drag = true"
+          @end="drag = false"
+          handle=".handle"
+        >
+          <transition-group
+            type="transition"
+            :name="!drag ? 'flip-list' : null"
           >
-            <div class="handle"></div>
-            <input
-              type="text"
-              v-model="ticket.title"
-              @change="changeTicketTitle(ticket)"
-            />
-          </li>
-        </ul>
+            <li
+              class="list-group-item"
+              v-for="(ticket, index) in column.tickets_list"
+              :key="ticket.id"
+              :data-index="index"
+              @dblclick="openTicketDetailDialog(ticket)"
+            >
+              <div class="handle">
+                <i class="bx bx-menu"></i>
+              </div>
+              <input
+                type="text"
+                v-model="ticket.title"
+                @change="changeTicketTitle(ticket)"
+              />
+            </li>
+          </transition-group>
+        </draggable>
       </div>
 
       <div class="add-column-container">
@@ -102,16 +119,25 @@
 import { Component, Vue, Prop } from "vue-property-decorator";
 import BoardModel from "@/lib/Board";
 import TicketModel from "@/lib/Ticket";
-import ColumnModel from "@/lib/ColumnTicket";
+import ColumnModel from "@/lib/Column";
+import draggable from "vuedraggable";
+
+interface DragOption {
+  animation: number;
+  group: string;
+  disabled: boolean;
+  ghostClass: string;
+}
 
 @Component({
-  components: {},
+  components: { draggable },
 })
 export default class Board extends Vue {
   @Prop({ default: null })
   board!: BoardModel;
   ticketDetailDialogOpened = false;
   ticket: TicketModel | null = null;
+  drag = false;
 
   mounted(): void {
     this.$store.dispatch("loadBoard", this.board);
@@ -200,6 +226,30 @@ export default class Board extends Vue {
   async deleteColumn(column: ColumnModel): Promise<void> {
     this.$store.dispatch("deleteColumn", column);
   }
+
+  onTicketChange(e, column): void {
+    console.log("change", column, e);
+    if (e.added) {
+      const ticket = e.added.element;
+      ticket.column = column.id;
+      const payload = {
+        id: ticket.id,
+        patch: {
+          column: ticket.column,
+        },
+      };
+      this.$store.dispatch("updateTicket", payload);
+    }
+  }
+
+  get dragOptions(): DragOption {
+    return {
+      animation: 200,
+      group: "tickets",
+      disabled: false,
+      ghostClass: "ghost",
+    };
+  }
 }
 </script>
 
@@ -232,8 +282,9 @@ li {
 }
 
 li {
+  display: flex;
   padding: 5px;
-  padding-left: 15px;
+  padding-left: 10px;
   border-radius: 25px;
   margin-top: 10px;
   background-color: hsl(0, 0%, 97%);
@@ -242,11 +293,8 @@ li {
   font-size: 14px;
 }
 
-li {
-  display: flex;
-}
-
 li input {
+  margin-left: 5px;
   flex: 1;
   border: none;
   background: none;
@@ -278,6 +326,31 @@ textarea {
 
 h3 {
   display: flex;
+}
+
+.handle {
+  cursor: move;
+}
+
+.flip-list-move {
+  transition: transform 0.5s;
+}
+
+.no-move {
+  transition: transform 0s;
+}
+
+.ghost {
+  opacity: 0.5;
+  background: #c8ebfb;
+}
+
+.list-group {
+  min-height: 20px;
+}
+
+.list-group-item {
+  cursor: move;
 }
 </style>
 

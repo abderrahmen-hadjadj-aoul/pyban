@@ -76,7 +76,7 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import { Client } from "@/lib/client";
+import Client from "@/lib/client";
 
 @Component({
   components: {},
