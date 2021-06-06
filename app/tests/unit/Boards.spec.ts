@@ -5,7 +5,7 @@ import Vuex from "vuex";
 
 Vue.use(Vuex);
 
-describe("Board", () => {
+describe("Boards", () => {
   let actions: any;
   let store: any;
 

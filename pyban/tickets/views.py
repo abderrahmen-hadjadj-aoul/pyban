@@ -188,3 +188,17 @@ class TicketDetail(APIView):
             print("ERROR", e)
             body = {"message": "Ticket does not exist"}
             return Response(body, status=status.HTTP_404_NOT_FOUND)
+
+    def delete(self, request, pk):
+        try:
+            ticket = Ticket.objects.get(pk=pk)
+            if request.user.canView(ticket):
+                ticket.delete()
+                serializer = TicketSerializer(ticket)
+                return Response(serializer.data)
+            else:
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
+        except Exception as e:
+            print("ERROR", e)
+            body = {"message": "Ticket does not exist"}
+            return Response(body, status=status.HTTP_404_NOT_FOUND)

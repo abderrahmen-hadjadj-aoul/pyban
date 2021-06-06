@@ -44,7 +44,7 @@ export default new Vuex.Store({
     },
     // TICKETS
     addTicket(state, ticket) {
-      console.log("ticket", ticket);
+      console.log("add ticket", ticket);
       const board = state.boards.find((board) => board.id === ticket.board);
       console.log("add ticket in board", board);
       console.log("searching ticket", ticket.id);
@@ -57,6 +57,18 @@ export default new Vuex.Store({
           board.tickets[index] = ticket;
         } else {
           board.tickets.push(ticket);
+        }
+      }
+    },
+    deleteTicket(state, ticket) {
+      console.log("delete ticket", ticket);
+      const board = state.boards.find((board) => board.id === ticket.board);
+      if (board) {
+        const index = board.tickets
+          .map((ticket) => ticket.id)
+          .indexOf(ticket.id);
+        if (index > -1) {
+          board.tickets.splice(index, 1);
         }
       }
     },
@@ -83,7 +95,7 @@ export default new Vuex.Store({
       console.log("createBoard", board);
       const res = await client.createBoard(board);
       const createdBoard = res.data;
-      context.commit("addBoard", createdBoard);
+      context.commit("addBoard", new BoardModel(createdBoard));
       return createdBoard;
     },
     async getBoards(context) {
@@ -116,6 +128,11 @@ export default new Vuex.Store({
     async updateTicket(context, payload: TicketPatchPayload) {
       console.log("updateTicket", payload);
       await client.updateTicket(payload);
+    },
+    async deleteTicket(context, ticket: TicketModel) {
+      console.log("deleteTicket", ticket);
+      await client.deleteTicket(ticket);
+      context.commit("deleteTicket", ticket);
     },
   },
   modules: {},

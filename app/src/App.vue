@@ -38,6 +38,7 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import Landing from "@/components/Landing.vue";
+import User from "@/lib/User";
 
 @Component({
   components: { Landing },
@@ -49,7 +50,7 @@ export default class App extends Vue {
     return this.$store.state.logged;
   }
 
-  get user(): any {
+  get user(): User {
     return this.$store.state.user;
   }
 

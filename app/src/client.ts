@@ -150,4 +150,14 @@ export default class Client {
       throw new Error(data.message);
     }
   }
+
+  async deleteTicket(ticket: TicketModel): Promise<AxiosResponse> {
+    try {
+      const res = await this.instance.delete("/tickets/tickets/" + ticket.id);
+      return res;
+    } catch (e) {
+      const data = e.response.data;
+      throw new Error(data.message);
+    }
+  }
 }

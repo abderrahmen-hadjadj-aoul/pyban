@@ -459,3 +459,40 @@ class GeneralTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(ticket["title"], payload["title"])
         self.assertEqual(ticket["description"], payload["description"])
+
+    def test_delete_ticket(self):
+        # Create user
+        username = "Tom"
+        password = "123"
+        (response, created_user) = self.create_user(username, password)
+        (response, data) = self.get_token(username, password)
+        token = data["token"]
+        headers = {"HTTP_AUTHORIZATION": "Token " + token}
+        # Create board
+        name = "Board Name for tickets"
+        (response, created_board) = self.create_board(name, headers=headers)
+        boardid = created_board["id"]
+        # Create ticket
+        payload = {
+            "title": "Ticket Title",
+            "description": "Ticket Description",
+            "board": boardid,
+        }
+        response = self.client.post(reverse("tickets:tickets"),
+                                    json.dumps(payload),
+                                    content_type="application/json",
+                                    **headers)
+        ticket = json.loads(response.content)
+        ticketid = ticket["id"]
+        # Delete Ticket
+        response = self.client.delete(
+            reverse("tickets:ticket", kwargs={"pk": ticketid}), **headers)
+        ticket = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ticket["title"], payload["title"])
+        self.assertEqual(ticket["description"], payload["description"])
+        # Get Ticket
+        response = self.client.get(
+            reverse("tickets:ticket", kwargs={"pk": ticketid}), **headers)
+        ticket = json.loads(response.content)
+        self.assertEqual(response.status_code, 404)

@@ -8,12 +8,14 @@
         <h3>Todo</h3>
         <div class="line">
           <vs-input
+            id="title-input"
             v-model="title"
             placeholder="New ticket title"
             @keypress.enter="addTicket"
           />
           <vs-button
             icon
+            id="create-ticket"
             ref="add"
             @click="addTicket"
             :disabled="!title.trim()"
@@ -22,13 +24,17 @@
           </vs-button>
         </div>
         <ul>
-          <li v-for="ticket in board.tickets" :key="ticket.id">
+          <li
+            v-for="(ticket, index) in board.tickets"
+            :key="ticket.id"
+            :data-index="index"
+            @dblclick="openTicketDetailDialog(ticket)"
+          >
             <div class="handle"></div>
             <input
               type="text"
               v-model="ticket.title"
               @change="changeTicketTitle(ticket)"
-              @dblclick="openTicketDetailDialog(ticket)"
             />
           </li>
         </ul>
@@ -42,12 +48,14 @@
 
       <div class="con-content" v-if="ticket">
         <vs-input
+          data-name="dialog-title"
           v-model="ticket.title"
           @change="changeTicketTitle(ticket)"
           placeholder="Name"
         ></vs-input>
         <div class="description-container">
           <textarea
+            data-name="dialog-description"
             rows="7"
             class="description"
             v-model="ticket.description"
@@ -56,6 +64,13 @@
           ></textarea>
         </div>
       </div>
+      <template #footer>
+        <div class="con-footer">
+          <vs-button id="delete-button" danger @click="deleteTicket(ticket)">
+            Delete
+          </vs-button>
+        </div>
+      </template>
     </vs-dialog>
   </div>
 </template>
@@ -130,6 +145,11 @@ export default class Board extends Vue {
   closeTicketDetailDialog(): void {
     this.ticket = null;
     this.ticketDetailDialogOpened = false;
+  }
+
+  async deleteTicket(ticket: TicketModel): Promise<void> {
+    this.$store.dispatch("deleteTicket", ticket);
+    this.closeTicketDetailDialog();
   }
 }
 </script>
