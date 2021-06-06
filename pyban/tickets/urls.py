@@ -19,9 +19,8 @@ urlpatterns = [
     path('boards/<int:pk>/columns',
          views.ColumnList.as_view(),
          name='board_columns'),
-    # path('boards/<int:pk>/columns/<int:pkc>',
-    #      views.ColumnDetail.as_view(),
-    #      name='column'),
+    path('columns/<int:pk>', views.ColumnDetail.as_view(),
+         name='board_column'),
     # TICKETS
     path('tickets', views.TicketList.as_view(), name='tickets'),
     path('tickets/<int:pk>', views.TicketDetail.as_view(), name='ticket'),

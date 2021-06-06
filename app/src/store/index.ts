@@ -101,6 +101,19 @@ export default new Vuex.Store({
         }
       }
     },
+    deleteColumn(state, column: ColumnModel) {
+      console.log("store delete column", column);
+      const board = state.boards.find((board) => board.id === column.board);
+      if (board) {
+        const index = board.columns_list
+          .map((ticket) => ticket.id)
+          .indexOf(column.id);
+        console.log("index", index);
+        if (index > -1) {
+          board.columns_list.splice(index, 1);
+        }
+      }
+    },
   },
   actions: {
     // USERS
@@ -183,11 +196,21 @@ export default new Vuex.Store({
       await client.deleteTicket(ticket);
       context.commit("deleteTicket", ticket);
     },
+    // COLUMNS
     async addColumn(context, payload: ColumnAddPayload) {
       console.log("addColumn in board", payload);
       const res = await client.addColumn(payload.board, payload.column);
       const createdColumn = new ColumnModel(res.data);
       context.commit("addColumn", createdColumn);
+    },
+    async updateColumn(context, column: ColumnModel) {
+      console.log("updateColumn", column);
+      await client.updateColumn(column);
+    },
+    async deleteColumn(context, column: ColumnModel) {
+      console.log("deleteColumn", column);
+      await client.deleteColumn(column);
+      context.commit("deleteColumn", column);
     },
   },
   modules: {},

@@ -141,12 +141,10 @@ class TicketList(APIView):
 
     def get(self, request, format=None):
         boardid = request.query_params.get("boardid")
-        print("get tickets for board", boardid)
         board = Board.objects.get(pk=boardid)
         if not request.user.canView(board):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         tickets = Ticket.objects.filter(board=board)
-        print("tickets found", tickets)
         serializer = TicketSerializer(tickets, many=True)
         return Response(serializer.data)
 
@@ -162,7 +160,6 @@ class TicketList(APIView):
         serializer = TicketSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            print("ticket created", serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -197,7 +194,6 @@ class TicketDetail(APIView):
             else:
                 return Response(status=status.HTTP_401_UNAUTHORIZED)
         except Exception as e:
-            print("ERROR", e)
             body = {"message": e}
             return Response(body, status=status.HTTP_404_NOT_FOUND)
 
@@ -210,8 +206,7 @@ class TicketDetail(APIView):
                 return Response(serializer.data)
             else:
                 return Response(status=status.HTTP_401_UNAUTHORIZED)
-        except Exception as e:
-            print("ERROR", e)
+        except Exception:
             body = {"message": "Ticket does not exist"}
             return Response(body, status=status.HTTP_404_NOT_FOUND)
 
@@ -244,3 +239,36 @@ class ColumnList(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ColumnDetail(APIView):
+    permission_classes = (IsAuthenticated, )
+
+    def patch(self, request, pk):
+        try:
+            column = Column.objects.get(pk=pk)
+            data = request.data
+            if request.user.canEdit(column):
+                if "title" in data:
+                    column.title = data["title"]
+                column.save()
+                serializer = ColumnSerializer(column)
+                return Response(serializer.data)
+            else:
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
+        except Exception as e:
+            body = {"message": e}
+            return Response(body, status=status.HTTP_404_NOT_FOUND)
+
+    def delete(self, request, pk):
+        try:
+            column = Column.objects.get(pk=pk)
+            if request.user.canEdit(column):
+                column.delete()
+                serializer = ColumnSerializer(column)
+                return Response(serializer.data)
+            else:
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
+        except Exception as e:
+            body = {"message": e}
+            return Response(body, status=status.HTTP_404_NOT_FOUND)

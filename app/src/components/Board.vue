@@ -5,7 +5,22 @@
     </h2>
     <div class="columns">
       <div class="column" v-for="column in board.columns_list" :key="column.id">
-        <h3>{{ column.title }}</h3>
+        <h3>
+          <vs-input
+            v-model="column.title"
+            placeholder="New ticket title"
+            @change="updateColumn(column)"
+          />
+          <vs-button
+            icon
+            danger
+            size="mini"
+            id="delete-column"
+            @click="deleteColumn(column)"
+          >
+            <i class="bx bx-trash"></i>
+          </vs-button>
+        </h3>
         <div class="line">
           <vs-input
             v-model="column._new_ticket_title"
@@ -150,6 +165,11 @@ export default class Board extends Vue {
     this.$store.dispatch("updateTicket", payload);
   }
 
+  async updateColumn(column: ColumnModel): Promise<void> {
+    console.log("updateColumn", column);
+    this.$store.dispatch("updateColumn", column);
+  }
+
   openTicketDetailDialog(ticket: TicketModel): void {
     console.log("open ticket", ticket);
     this.ticket = ticket;
@@ -175,6 +195,10 @@ export default class Board extends Vue {
       },
     };
     this.$store.dispatch("addColumn", payload);
+  }
+
+  async deleteColumn(column: ColumnModel): Promise<void> {
+    this.$store.dispatch("deleteColumn", column);
   }
 }
 </script>
@@ -250,5 +274,15 @@ textarea {
 
 .add-column-container {
   margin-top: 20px;
+}
+
+h3 {
+  display: flex;
+}
+</style>
+
+<style>
+h3 input.vs-input {
+  font-size: 25px;
 }
 </style>

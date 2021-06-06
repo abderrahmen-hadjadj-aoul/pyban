@@ -188,6 +188,8 @@ export default class Client {
     }
   }
 
+  // COLUMN
+
   async addColumn(
     board: BoardModel,
     column: ColumnModel
@@ -197,6 +199,32 @@ export default class Client {
         `/tickets/boards/${board.id}/columns`,
         column
       );
+      return res;
+    } catch (e) {
+      const data = e.response.data;
+      throw new Error(data.message);
+    }
+  }
+
+  async updateColumn(column: ColumnModel): Promise<AxiosResponse> {
+    const patch = {
+      title: column.title,
+    };
+    try {
+      const res = await this.instance.patch(
+        "/tickets/columns/" + column.id,
+        patch
+      );
+      return res;
+    } catch (e) {
+      const data = e.response.data;
+      throw new Error(data.message);
+    }
+  }
+
+  async deleteColumn(column: ColumnModel): Promise<AxiosResponse> {
+    try {
+      const res = await this.instance.delete("/tickets/columns/" + column.id);
       return res;
     } catch (e) {
       const data = e.response.data;
