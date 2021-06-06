@@ -72,7 +72,19 @@ export default class Boards extends Vue {
   board: BoardModel | null = null;
 
   async mounted(): Promise<void> {
-    this.$store.dispatch("getBoards");
+    await this.$store.dispatch("getBoards");
+    const board_id = this.$route.params.board_id;
+    if (board_id) {
+      console.log("board id is defined", board_id);
+      console.log("board", this.$store.state.boards);
+      const board = this.$store.state.boards.find(
+        (board) => "" + board.id === board_id
+      );
+      if (board) {
+        console.log("board found", board);
+        this.board = board;
+      }
+    }
   }
 
   openDialog(): void {
@@ -113,6 +125,7 @@ export default class Boards extends Vue {
 
   openBoard(board: BoardModel): void {
     this.board = board;
+    this.$router.push("/boards/" + board.id);
   }
 
   returnToBoardList(): void {

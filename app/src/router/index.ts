@@ -25,6 +25,11 @@ const routes: Array<RouteConfig> = [
     name: "Boards",
     component: Boards,
   },
+  {
+    path: "/boards/:board_id",
+    name: "Board",
+    component: Boards,
+  },
 ];
 
 const router = new VueRouter({
