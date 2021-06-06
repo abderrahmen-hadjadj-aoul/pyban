@@ -1,7 +1,5 @@
-from django.db import transaction
 from django.test import TestCase, Client
 from django.urls import reverse
-from .models import User
 import json
 
 
@@ -146,13 +144,25 @@ class GeneralTests(TestCase):
     def create_board(self, name, headers={}):
         payload = {
             "name": name,
+            "columns": [],
         }
         response = self.client.post(reverse("tickets:boards"),
                                     json.dumps(payload),
                                     content_type="application/json",
                                     **headers)
         board = json.loads(response.content)
-        return (response, board)
+        boardid = board["id"]
+        payload = {
+            "title": "TODO",
+        }
+        response = self.client.post(reverse("tickets:board_columns",
+                                            kwargs={"pk": boardid}),
+                                    json.dumps(payload),
+                                    content_type="application/json",
+                                    **headers)
+        column = json.loads(response.content)
+        board["columns"].append(column["id"])
+        return (response, board, column)
 
     def get_board(self, board_id, headers={}):
         response = self.client.get(
@@ -171,13 +181,12 @@ class GeneralTests(TestCase):
         username = "Tom"
         password = "123"
         (response, created_user) = self.create_user(username, password)
-        id = created_user["id"]
-        user = User.objects.get(pk=id)
         name = "Board Name"
         (response, data) = self.get_token(username, password)
         token = data["token"]
         headers = {"HTTP_AUTHORIZATION": "Token " + token}
-        (response, created_board) = self.create_board(name, headers=headers)
+        (response, created_board,
+         created_column) = self.create_board(name, headers=headers)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(created_board["name"], name)
 
@@ -189,15 +198,14 @@ class GeneralTests(TestCase):
         username = "Tom"
         password = "123"
         (response, created_user) = self.create_user(username, password)
-        userid = created_user["id"]
-        user = User.objects.get(pk=userid)
         # Get token
         (response, data) = self.get_token(username, password)
         token = data["token"]
         headers = {"HTTP_AUTHORIZATION": "Token " + token}
         # Create board
         name = "Board Name"
-        (response, created_board) = self.create_board(name, headers=headers)
+        (response, created_board,
+         created_column) = self.create_board(name, headers=headers)
         self.assertEqual(response.status_code, 201)
         boardid = created_board["id"]
         # Get board
@@ -212,8 +220,6 @@ class GeneralTests(TestCase):
         username = "Tom"
         password = "123"
         (response, created_user) = self.create_user(username, password)
-        userid = created_user["id"]
-        user = User.objects.get(pk=userid)
         (response, data) = self.get_token(username, password)
         token = data["token"]
         headers = {"HTTP_AUTHORIZATION": "Token " + token}
@@ -241,7 +247,8 @@ class GeneralTests(TestCase):
         headers2 = {"HTTP_AUTHORIZATION": "Token " + token2}
         # Create board
         name = "Board Name"
-        (response, created_board) = self.create_board(name, headers=headers)
+        (response, created_board,
+         created_column) = self.create_board(name, headers=headers)
         self.assertEqual(response.status_code, 201)
         boardid = created_board["id"]
         # Get board
@@ -262,8 +269,8 @@ class GeneralTests(TestCase):
         number_of_boards = 5
         for n in range(number_of_boards):
             name = "Board Name" + str(n)
-            (response, created_board) = self.create_board(name,
-                                                          headers=headers)
+            (response, created_board,
+             created_column) = self.create_board(name, headers=headers)
             created_boards.append((response, created_board))
         response = self.client.get(reverse("tickets:boards"), **headers)
         boards = json.loads(response.content)
@@ -292,12 +299,12 @@ class GeneralTests(TestCase):
         number_of_boards = 5
         for n in range(number_of_boards):
             name = "Board Name" + str(n)
-            (response, created_board) = self.create_board(name,
-                                                          headers=headers)
+            (response, created_board,
+             created_column) = self.create_board(name, headers=headers)
             created_boards.append((response, created_board))
             name = "Board Name Other" + str(n)
-            (response, created_board) = self.create_board(name,
-                                                          headers=headers2)
+            (response, created_board,
+             created_column) = self.create_board(name, headers=headers2)
         response = self.client.get(reverse("tickets:boards"), **headers)
         boards = json.loads(response.content)
         self.assertEqual(response.status_code, 200)
@@ -317,14 +324,15 @@ class GeneralTests(TestCase):
         headers = {"HTTP_AUTHORIZATION": "Token " + token}
         # Create board
         name = "Board Name for tickets"
-        (response, created_board) = self.create_board(name, headers=headers)
+        (response, created_board,
+         created_column) = self.create_board(name, headers=headers)
         self.assertEqual(response.status_code, 201)
-        boardid = created_board["id"]
+        columnid = created_column["id"]
         # Create ticket
         payload = {
             "title": "Ticket Title",
             "description": "Ticket Description",
-            "board": boardid,
+            "column": columnid,
         }
         response = self.client.post(reverse("tickets:tickets"),
                                     json.dumps(payload),
@@ -358,14 +366,14 @@ class GeneralTests(TestCase):
         headers2 = {"HTTP_AUTHORIZATION": "Token " + token2}
         # Create board
         name = "Board Name for tickets"
-        (response, created_board) = self.create_board(name, headers=headers)
+        (response, created_board,
+         created_column) = self.create_board(name, headers=headers)
         self.assertEqual(response.status_code, 201)
-        boardid = created_board["id"]
         # Create ticket
         payload = {
             "title": "Ticket Title",
             "description": "Ticket Description",
-            "board": boardid,
+            "column": created_column["id"],
         }
         response = self.client.post(reverse("tickets:tickets"),
                                     json.dumps(payload),
@@ -386,7 +394,8 @@ class GeneralTests(TestCase):
         headers = {"HTTP_AUTHORIZATION": "Token " + token}
         # Create board
         name = "Board Name for tickets"
-        (response, created_board) = self.create_board(name, headers=headers)
+        (response, created_board,
+         created_column) = self.create_board(name, headers=headers)
         self.assertEqual(response.status_code, 201)
         boardid = created_board["id"]
         # Create ticket
@@ -396,7 +405,7 @@ class GeneralTests(TestCase):
             payload = {
                 "title": "Ticket Title" + str(n),
                 "description": "Ticket Description" + str(n),
-                "board": boardid,
+                "column": created_column["id"],
             }
             response = self.client.post(reverse("tickets:tickets"),
                                         json.dumps(payload),
@@ -422,13 +431,13 @@ class GeneralTests(TestCase):
         headers = {"HTTP_AUTHORIZATION": "Token " + token}
         # Create board
         name = "Board Name for tickets"
-        (response, created_board) = self.create_board(name, headers=headers)
-        boardid = created_board["id"]
+        (response, created_board,
+         created_column) = self.create_board(name, headers=headers)
         # Create ticket
         payload = {
             "title": "Ticket Title",
             "description": "Ticket Description",
-            "board": boardid,
+            "column": created_column["id"],
         }
         response = self.client.post(reverse("tickets:tickets"),
                                     json.dumps(payload),
@@ -470,13 +479,13 @@ class GeneralTests(TestCase):
         headers = {"HTTP_AUTHORIZATION": "Token " + token}
         # Create board
         name = "Board Name for tickets"
-        (response, created_board) = self.create_board(name, headers=headers)
-        boardid = created_board["id"]
+        (response, created_board,
+         created_column) = self.create_board(name, headers=headers)
         # Create ticket
         payload = {
             "title": "Ticket Title",
             "description": "Ticket Description",
-            "board": boardid,
+            "column": created_column["id"],
         }
         response = self.client.post(reverse("tickets:tickets"),
                                     json.dumps(payload),
@@ -496,3 +505,34 @@ class GeneralTests(TestCase):
             reverse("tickets:ticket", kwargs={"pk": ticketid}), **headers)
         ticket = json.loads(response.content)
         self.assertEqual(response.status_code, 404)
+
+    def test_column_create(self):
+        # Create user
+        username = "Tom"
+        password = "123"
+        (response, created_user) = self.create_user(username, password)
+        (response, data) = self.get_token(username, password)
+        token = data["token"]
+        headers = {"HTTP_AUTHORIZATION": "Token " + token}
+        # Create board
+        name = "Board Name for tickets"
+        (response, created_board,
+         created_column) = self.create_board(name, headers=headers)
+        boardid = created_board["id"]
+        payload = {
+            "title": "In progress",
+        }
+        # Create column
+        url = reverse("tickets:board_columns", kwargs={"pk": boardid})
+        response = self.client.post(url,
+                                    json.dumps(payload),
+                                    content_type="application/json",
+                                    **headers)
+        self.assertEqual(response.status_code, 201)
+        # Get column
+        response = self.client.get(
+            reverse("tickets:board_columns", kwargs={"pk": boardid}),
+            **headers)
+        columns = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(columns[1]["title"], payload["title"])

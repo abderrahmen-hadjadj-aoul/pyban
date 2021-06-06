@@ -6,10 +6,9 @@ from django.http import JsonResponse
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from django.contrib.auth import authenticate, login
-from django.contrib.auth.decorators import login_required
 from rest_framework import status
-from .models import Board, Ticket
-from .serializers import BoardSerializer, TicketSerializer
+from .models import Board, Ticket, Column
+from .serializers import BoardSerializer, TicketSerializer, ColumnSerializer
 
 User = get_user_model()
 
@@ -106,6 +105,8 @@ class BoardList(APIView):
     def post(self, request, format=None):
         data = request.data
         data["owner"] = request.user.id
+        if "columns" not in data:
+            data["columns"] = []
         serializer = BoardSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -140,23 +141,28 @@ class TicketList(APIView):
 
     def get(self, request, format=None):
         boardid = request.query_params.get("boardid")
+        print("get tickets for board", boardid)
         board = Board.objects.get(pk=boardid)
         if not request.user.canView(board):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         tickets = Ticket.objects.filter(board=board)
+        print("tickets found", tickets)
         serializer = TicketSerializer(tickets, many=True)
         return Response(serializer.data)
 
     def post(self, request, format=None):
         data = request.data
         data["owner"] = request.user.id
-        board = Board.objects.get(pk=data["board"])
+        column = Column.objects.get(pk=data["column"])
+        board = column.board
         if not request.user.canEdit(board):
             error = {"error": "You don't have access to the board"}
             return Response(error, status=status.HTTP_401_UNAUTHORIZED)
+        request.data["board"] = board.id
         serializer = TicketSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            print("ticket created", serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -192,7 +198,7 @@ class TicketDetail(APIView):
                 return Response(status=status.HTTP_401_UNAUTHORIZED)
         except Exception as e:
             print("ERROR", e)
-            body = {"message": "Ticket does not exist"}
+            body = {"message": e}
             return Response(body, status=status.HTTP_404_NOT_FOUND)
 
     def delete(self, request, pk):
@@ -208,3 +214,33 @@ class TicketDetail(APIView):
             print("ERROR", e)
             body = {"message": "Ticket does not exist"}
             return Response(body, status=status.HTTP_404_NOT_FOUND)
+
+
+# COLUMNS
+
+
+class ColumnList(APIView):
+    """
+    List all columns, or create a new columns.
+    """
+    permission_classes = (IsAuthenticated, )
+
+    def get(self, request, pk, format=None):
+        board = Board.objects.get(pk=pk)
+        if not request.user.canView(board):
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        columns = Column.objects.filter(board=board)
+        serializer = ColumnSerializer(columns, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, pk, format=None):
+        board = Board.objects.get(pk=pk)
+        if not request.user.canEdit(board):
+            error = {"error": "You don't have access to the board"}
+            return Response(error, status=status.HTTP_401_UNAUTHORIZED)
+        request.data["board"] = pk
+        serializer = ColumnSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

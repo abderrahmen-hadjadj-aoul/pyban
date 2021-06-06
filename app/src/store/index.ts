@@ -2,6 +2,7 @@ import Vue from "vue";
 import Vuex from "vuex";
 import BoardModel from "@/lib/Board";
 import TicketModel from "@/lib/Ticket";
+import ColumnModel from "@/lib/Column";
 import Client from "../client";
 
 Vue.use(Vuex);
@@ -17,6 +18,11 @@ interface TicketPatch {
 interface TicketPatchPayload {
   id: string;
   patch: TicketPatch;
+}
+
+interface ColumnAddPayload {
+  board: BoardModel;
+  column: ColumnModel;
 }
 
 export default new Vuex.Store({
@@ -44,32 +50,54 @@ export default new Vuex.Store({
       state.boards = boards.map((board: BoardModel) => new BoardModel(board));
     },
     // TICKETS
-    addTicket(state, ticket) {
+    addTicket(state, { column, ticket }) {
       console.log("add ticket", ticket);
-      const board = state.boards.find((board) => board.id === ticket.board);
-      console.log("add ticket in board", board);
-      console.log("searching ticket", ticket.id);
-      if (board) {
-        const index = board.tickets
-          .map((ticket) => ticket.id)
+      if (!column) {
+        const board = state.boards.find((board) => board.id === ticket.board);
+        if (board) {
+          console.log("found board");
+          column = board.columns_list.find(
+            (column) => column.id === ticket.column
+          );
+        }
+      }
+      if (column) {
+        const index = column.tickets_list
+          .map((ticket: TicketModel) => ticket.id)
           .indexOf(ticket.id);
         console.log("index", index);
         if (index > -1) {
-          board.tickets[index] = ticket;
+          column.tickets_list[index] = ticket;
         } else {
-          board.tickets.push(ticket);
+          column.tickets.push(ticket.id);
+          column.tickets_list.push(ticket);
         }
       }
     },
-    deleteTicket(state, ticket) {
+    deleteTicket(state, { column, ticket }) {
       console.log("delete ticket", ticket);
-      const board = state.boards.find((board) => board.id === ticket.board);
-      if (board) {
-        const index = board.tickets
-          .map((ticket) => ticket.id)
+      if (column) {
+        const index = column.tickets
+          .map((ticket: TicketModel) => ticket.id)
           .indexOf(ticket.id);
         if (index > -1) {
-          board.tickets.splice(index, 1);
+          column.tickets.splice(index, 1);
+        }
+      }
+    },
+    // COLUMNS
+    addColumn(state, column: ColumnModel) {
+      console.log("store add column", column);
+      const board = state.boards.find((board) => board.id === column.board);
+      if (board) {
+        const index = board.columns_list
+          .map((ticket) => ticket.id)
+          .indexOf(column.id);
+        console.log("index", index);
+        if (index > -1) {
+          board.columns_list[index] = column;
+        } else {
+          board.columns_list.push(column);
         }
       }
     },
@@ -117,6 +145,13 @@ export default new Vuex.Store({
       context.commit("setBoards", boards);
       return boards;
     },
+    async loadBoard(context, board) {
+      const res = await client.loadBoard(board);
+      board.columns_list = res.data.map(
+        (column: ColumnModel) => new ColumnModel(column)
+      );
+      await context.dispatch("loadTickets", board);
+    },
     // TICKET
     async loadTickets(context, board) {
       console.log("loadTickets", board);
@@ -125,16 +160,18 @@ export default new Vuex.Store({
         (ticket: TicketModel) => new TicketModel(ticket)
       );
 
+      console.log("tickets", tickets);
+
       tickets.forEach((ticket: TicketModel) => {
-        context.commit("addTicket", ticket);
+        context.commit("addTicket", { ticket });
       });
       return tickets;
     },
-    async createTicket(context, ticket) {
+    async createTicket(context, { column, ticket }) {
       console.log("createTicket", ticket);
       const res = await client.createTicket(ticket);
       const createdTicket = new TicketModel(res.data);
-      context.commit("addTicket", createdTicket);
+      context.commit("addTicket", { column, ticket: createdTicket });
       return createdTicket;
     },
     async updateTicket(context, payload: TicketPatchPayload) {
@@ -145,6 +182,12 @@ export default new Vuex.Store({
       console.log("deleteTicket", ticket);
       await client.deleteTicket(ticket);
       context.commit("deleteTicket", ticket);
+    },
+    async addColumn(context, payload: ColumnAddPayload) {
+      console.log("addColumn in board", payload);
+      const res = await client.addColumn(payload.board, payload.column);
+      const createdColumn = new ColumnModel(res.data);
+      context.commit("addColumn", createdColumn);
     },
   },
   modules: {},

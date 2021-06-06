@@ -4,28 +4,29 @@
       {{ board.name }}
     </h2>
     <div class="columns">
-      <div class="column">
-        <h3>Todo</h3>
+      <div class="column" v-for="column in board.columns_list" :key="column.id">
+        <h3>{{ column.title }}</h3>
         <div class="line">
           <vs-input
-            id="title-input"
-            v-model="title"
+            v-model="column._new_ticket_title"
+            :id="'title-input-' + column.id"
+            :ref="'title-input-' + column.id"
             placeholder="New ticket title"
-            @keypress.enter="addTicket"
+            @keypress.enter="addTicket(column)"
           />
           <vs-button
             icon
             id="create-ticket"
-            ref="add"
-            @click="addTicket"
-            :disabled="!title.trim()"
+            :ref="'add-' + column.id"
+            @click="addTicket(column)"
+            :disabled="!column._new_ticket_title.trim()"
           >
             <i class="bx bx-plus"></i>
           </vs-button>
         </div>
         <ul>
           <li
-            v-for="(ticket, index) in board.tickets"
+            v-for="(ticket, index) in column.tickets_list"
             :key="ticket.id"
             :data-index="index"
             @dblclick="openTicketDetailDialog(ticket)"
@@ -38,6 +39,13 @@
             />
           </li>
         </ul>
+      </div>
+
+      <div class="add-column-container">
+        <vs-button icon @click="addColumn">
+          <i class="bx bx-plus"></i>
+          Add column
+        </vs-button>
       </div>
     </div>
 
@@ -79,6 +87,7 @@
 import { Component, Vue, Prop } from "vue-property-decorator";
 import BoardModel from "@/lib/Board";
 import TicketModel from "@/lib/Ticket";
+import ColumnModel from "@/lib/ColumnTicket";
 
 @Component({
   components: {},
@@ -86,24 +95,29 @@ import TicketModel from "@/lib/Ticket";
 export default class Board extends Vue {
   @Prop({ default: null })
   board!: BoardModel;
-  title = "";
   ticketDetailDialogOpened = false;
   ticket: TicketModel | null = null;
 
   mounted(): void {
-    this.$store.dispatch("loadTickets", this.board);
+    this.$store.dispatch("loadBoard", this.board);
   }
 
-  async addTicket(): Promise<void> {
+  async addTicket(column: ColumnModel): Promise<void> {
     console.log("addTicket");
-    const payload = {
-      title: this.title,
+    const title = column._new_ticket_title;
+    console.log("title", title);
+    const ticket = {
+      title: title,
       description: "",
-      board: this.board.id,
+      column: column.id,
     };
-    this.title = "";
+    const payload = {
+      column,
+      ticket,
+    };
+    column._new_ticket_title = "";
     const loading = this.$vs.loading({
-      target: this.$refs.add,
+      target: this.$refs["add-" + column.id][0],
       scale: "0.6",
       background: "primary",
       opacity: 1,
@@ -150,6 +164,17 @@ export default class Board extends Vue {
   async deleteTicket(ticket: TicketModel): Promise<void> {
     this.$store.dispatch("deleteTicket", ticket);
     this.closeTicketDetailDialog();
+  }
+
+  async addColumn(): Promise<void> {
+    console.log("addColumn");
+    const payload = {
+      board: this.board,
+      column: {
+        title: "New Column",
+      },
+    };
+    this.$store.dispatch("addColumn", payload);
   }
 }
 </script>
@@ -221,5 +246,9 @@ textarea {
   border: none;
   border-radius: 12px;
   outline: none;
+}
+
+.add-column-container {
+  margin-top: 20px;
 }
 </style>

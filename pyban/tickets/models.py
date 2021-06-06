@@ -21,13 +21,27 @@ class Board(models.Model):
         return self.owner == user
 
 
-class Ticket(models.Model):
+class Column(models.Model):
     title = models.CharField(max_length=255)
-    description = models.TextField()
-    board = models.ForeignKey(Board, on_delete=models.CASCADE)
+    board = models.ForeignKey(Board,
+                              related_name="columns",
+                              on_delete=models.CASCADE)
 
     def canBeViewedBy(self, user):
         return self.board.owner == user
 
     def canBeEditedBy(self, user):
         return self.board.owner == user
+
+
+class Ticket(models.Model):
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    column = models.ForeignKey(Column, on_delete=models.CASCADE)
+    board = models.ForeignKey(Board, on_delete=models.CASCADE)
+
+    def canBeViewedBy(self, user):
+        return self.column.board.owner == user
+
+    def canBeEditedBy(self, user):
+        return self.column.board.owner == user

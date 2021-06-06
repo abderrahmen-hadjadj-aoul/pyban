@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 import BoardModel from "@/lib/Board";
 import TicketModel from "@/lib/Ticket";
+import ColumnModel from "@/lib/Column";
 
 interface Headers {
   Authorization?: string;
@@ -128,6 +129,18 @@ export default class Client {
     }
   }
 
+  async loadBoard(board: BoardModel): Promise<AxiosResponse> {
+    try {
+      const res = await this.instance.get(
+        `/tickets/boards/${board.id}/columns`
+      );
+      return res;
+    } catch (e) {
+      const data = e.response.data;
+      throw new Error(data.message);
+    }
+  }
+
   // TICKETS
 
   async loadTickets(board: BoardModel): Promise<AxiosResponse> {
@@ -168,6 +181,22 @@ export default class Client {
   async deleteTicket(ticket: TicketModel): Promise<AxiosResponse> {
     try {
       const res = await this.instance.delete("/tickets/tickets/" + ticket.id);
+      return res;
+    } catch (e) {
+      const data = e.response.data;
+      throw new Error(data.message);
+    }
+  }
+
+  async addColumn(
+    board: BoardModel,
+    column: ColumnModel
+  ): Promise<AxiosResponse> {
+    try {
+      const res = await this.instance.post(
+        `/tickets/boards/${board.id}/columns`,
+        column
+      );
       return res;
     } catch (e) {
       const data = e.response.data;

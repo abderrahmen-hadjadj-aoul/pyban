@@ -15,6 +15,13 @@ urlpatterns = [
     # BOARDS
     path('boards', views.BoardList.as_view(), name='boards'),
     path('boards/<int:pk>', views.BoardDetail.as_view(), name='board'),
+    # COLUMNS
+    path('boards/<int:pk>/columns',
+         views.ColumnList.as_view(),
+         name='board_columns'),
+    # path('boards/<int:pk>/columns/<int:pkc>',
+    #      views.ColumnDetail.as_view(),
+    #      name='column'),
     # TICKETS
     path('tickets', views.TicketList.as_view(), name='tickets'),
     path('tickets/<int:pk>', views.TicketDetail.as_view(), name='ticket'),
