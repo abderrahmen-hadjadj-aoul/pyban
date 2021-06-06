@@ -13,6 +13,12 @@ from .serializers import BoardSerializer, TicketSerializer
 
 User = get_user_model()
 
+
+def home(request):
+    body = {"message": "Hello world !"}
+    return JsonResponse(body)
+
+
 # LOGIN
 
 

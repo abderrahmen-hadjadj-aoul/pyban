@@ -27,6 +27,9 @@ export default class Client {
   token: string | null = null;
 
   constructor() {
+    if (process.env.NODE_ENV === "production") {
+      this.base = "/";
+    }
     const token = localStorage.getItem("token");
     if (token) {
       this.token = token;
@@ -40,6 +43,10 @@ export default class Client {
       headers,
     });
     this.initInstance();
+  }
+
+  hasToken(): boolean {
+    return !!this.token;
   }
 
   initInstance(): void {
@@ -80,6 +87,13 @@ export default class Client {
       const data = e.response.data;
       throw new Error(data.message);
     }
+  }
+
+  async logout(): Promise<void> {
+    console.log("client logout");
+    this.token = null;
+    localStorage.removeItem("token");
+    this.initInstance();
   }
 
   async getUserInfo(): Promise<AxiosResponse> {

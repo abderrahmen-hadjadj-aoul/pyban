@@ -21,6 +21,7 @@ interface TicketPatchPayload {
 
 export default new Vuex.Store({
   state: {
+    client,
     logged: false,
     token: null,
     user: null,
@@ -29,7 +30,7 @@ export default new Vuex.Store({
   mutations: {
     // USER
     setUser(state, user) {
-      state.logged = true;
+      state.logged = !!user;
       state.user = user;
     },
     setToken(state, token) {
@@ -89,6 +90,17 @@ export default new Vuex.Store({
       console.log("resCurrentUser", resCurrentUser);
       context.commit("setUser", resCurrentUser.data);
       return resCurrentUser;
+    },
+    async checkUser(context) {
+      setTimeout(async () => {
+        const res = await client.getUserInfo();
+        context.commit("setUser", res.data);
+      }, 1000);
+    },
+    async logout(context) {
+      console.log("store logout");
+      context.commit("setUser", null);
+      client.logout();
     },
     // BOARDS
     async createBoard(context, board) {

@@ -76,6 +76,7 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
+import { Client } from "@/lib/client";
 
 @Component({
   components: {},
@@ -103,6 +104,24 @@ export default class Landing extends Vue {
   loading_ = false;
   // eslint-disable-next-line
   loadingRef: any = null;
+
+  get client(): Client {
+    return this.$store.state.client;
+  }
+
+  async mounted(): Promise<void> {
+    if (this.client.hasToken()) {
+      const loader = this.$vs.loading();
+      try {
+        await this.$store.dispatch("checkUser");
+      } catch (e) {
+        console.error("userInfo error", e);
+      }
+      setTimeout(() => {
+        loader.close();
+      }, 1000);
+    }
+  }
 
   async login(): Promise<void> {
     try {

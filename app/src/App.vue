@@ -8,6 +8,12 @@
           </template>
           My account ({{ username }})
         </vs-sidebar-item>
+        <vs-sidebar-item id="logout" @click.native="logout" to="/logout">
+          <template #icon>
+            <i class="bx bx-log-out-circle"></i>
+          </template>
+          Logout
+        </vs-sidebar-item>
         <vs-sidebar-item id="home" to="/">
           <template #icon>
             <i class="bx bx-home"></i>
@@ -56,6 +62,10 @@ export default class App extends Vue {
 
   get username(): string {
     return this.user ? this.user.username : "";
+  }
+
+  logout(): void {
+    this.$store.dispatch("logout");
   }
 }
 </script>

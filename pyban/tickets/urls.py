@@ -7,6 +7,7 @@ app_name = "tickets"
 
 urlpatterns = [
     # USERS
+    path('', views.home, name='home'),
     path('api-token-auth', obtain_auth_token, name='api_token_auth'),
     path('users', views.users, name='users'),
     path('users/me', views.UserView.as_view(), name='user_current'),
