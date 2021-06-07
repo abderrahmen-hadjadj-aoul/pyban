@@ -91,12 +91,17 @@ export default class Boards extends Vue {
   openDialog(): void {
     this.dialogOpened = true;
     this.$nextTick(() => {
-      const els = this.$refs["boardNameInput"].$el;
-      const input = els.getElementsByTagName("input")[0];
-      console.log("input", input);
-      setTimeout(() => {
-        input.focus();
-      }, 50);
+      if (this.$refs["boardNameInput"]) {
+        const ref = this.$refs["boardNameInput"] as Vue;
+        const els = ref.$el as Element;
+        if (els) {
+          const input = els.getElementsByTagName("input")[0];
+          console.log("input", input);
+          setTimeout(() => {
+            input.focus();
+          }, 50);
+        }
+      }
     });
   }
 
@@ -113,7 +118,7 @@ export default class Boards extends Vue {
       color: "#fff",
     });
     try {
-      const board = await this.$store.dispatch("createBoard", {
+      await this.$store.dispatch("createBoard", {
         name: this.boardName,
       });
     } catch (e) {

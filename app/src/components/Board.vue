@@ -97,7 +97,7 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 import BoardModel from "@/lib/Board";
 import TicketModel from "@/lib/Ticket";
 import ColumnModel from "@/lib/Column";
-import Ticket from "@/components/Ticket";
+import Ticket from "@/components/Ticket.vue";
 import draggable from "vuedraggable";
 
 interface DragOption {
@@ -123,7 +123,7 @@ export default class Board extends Vue {
   ticket: TicketModel | null = null;
   drag = false;
 
-  async mounted(): void {
+  async mounted(): Promise<void> {
     await this.$store.dispatch("loadBoard", this.board);
     const ticket_id = this.$route.params.ticket_id;
     const tickets = this.board.getTickets();
@@ -132,7 +132,9 @@ export default class Board extends Vue {
       const ticket = tickets.find((t) => "" + t.id === ticket_id);
       console.log(tickets);
       console.log("found ticket", ticket);
-      this.openTicketDetailDialog(ticket);
+      if (ticket) {
+        this.openTicketDetailDialog(ticket);
+      }
     }
   }
 

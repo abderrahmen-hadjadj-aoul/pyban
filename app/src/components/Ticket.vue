@@ -46,7 +46,7 @@ import TicketModel from "@/lib/Ticket";
 @Component({
   components: {},
 })
-export default class Board extends Vue {
+export default class Ticket extends Vue {
   @Prop({ default: null })
   ticket!: TicketModel;
   ticketDetailDialogOpened = true;

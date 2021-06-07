@@ -37,7 +37,7 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import TicketModel from "@/lib/Ticket";
-import Ticket from "@/components/Ticket";
+import Ticket from "@/components/Ticket.vue";
 
 @Component({
   components: { Ticket },
@@ -54,7 +54,9 @@ export default class MyTickets extends Vue {
       const ticket = this.tickets.find((t) => "" + t.id === ticket_id);
       console.log(this.tickets);
       console.log("found ticket", ticket);
-      this.openTicket(ticket);
+      if (ticket) {
+        this.openTicket(ticket);
+      }
     }
   }
 
