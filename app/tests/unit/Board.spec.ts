@@ -11,7 +11,7 @@ describe("Board", () => {
 
   beforeEach(() => {
     actions = {
-      loadTickets: jest.fn(),
+      loadBoard: jest.fn(),
       createTicket: jest.fn(),
       updateTicket: jest.fn(),
       deleteTicket: jest.fn(),
@@ -27,21 +27,28 @@ describe("Board", () => {
       title: "Ticket title",
       description: "Something",
     };
+    const column = {
+      _new_ticket_title: "",
+      tickets_list: [ticketItem],
+    };
     const board = {
       name: "My board name",
-      tickets: [ticketItem],
+      columns_list: [column],
     };
     const propsData = {
       board,
     };
     const wrapper = mount(Board, { propsData, store });
     // Check loading
-    expect(actions.loadTickets).toHaveBeenCalled();
+    expect(actions.loadBoard).toHaveBeenCalled();
     // Check title
+    const drag = wrapper.findComponent({ name: "Draggable" });
+    expect(drag.exists()).toBe(true);
     const title = wrapper.find("h2");
     expect(title.exists()).toBe(true);
     expect(title.text()).toBe(board.name);
     // Check ticket list
+    await wrapper.vm.$nextTick();
     const ticket = wrapper.find("li");
     expect(ticket.exists()).toBe(true);
     const input = ticket.find("input").element as HTMLInputElement;
@@ -49,7 +56,7 @@ describe("Board", () => {
     // Check ticket creation
     const buttonCreate = wrapper.find("#create-ticket");
     expect(buttonCreate.attributes("disabled")).toBe("disabled");
-    wrapper.setData({ title: "New title" });
+    column._new_ticket_title = "New title";
     await wrapper.vm.$nextTick();
     expect(buttonCreate.attributes("disabled")).not.toBe("disabled");
     await buttonCreate.trigger("click");

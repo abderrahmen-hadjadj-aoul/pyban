@@ -138,7 +138,6 @@ export default class Landing extends Vue {
     try {
       this.loading = true;
       const response = await this.$store.dispatch("register", this.register);
-      console.log("response", response);
       this.messageRegister.display = true;
       this.messageRegister.text = "Account created";
       this.messageRegister.type = "success";

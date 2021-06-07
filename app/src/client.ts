@@ -28,8 +28,16 @@ export default class Client {
   token: string | null = null;
 
   constructor() {
+    console.log("env", process.env);
     if (process.env.NODE_ENV === "production") {
+      console.log("Production environment detected");
       this.base = "/";
+      console.log("> Configuring base url: ", this.base);
+    }
+    if (process.env.VUE_APP_PYBAN_BASE_URL) {
+      console.log("PYBAN_BASE_URL environment detected");
+      this.base = process.env.VUE_APP_PYBAN_BASE_URL;
+      console.log("> Configuring base url: ", this.base);
     }
     const token = localStorage.getItem("token");
     if (token) {
@@ -59,7 +67,6 @@ export default class Client {
       baseURL: this.base,
       headers,
     });
-    console.log("instance", headers);
   }
 
   // USERS
@@ -91,7 +98,6 @@ export default class Client {
   }
 
   async logout(): Promise<void> {
-    console.log("client logout");
     this.token = null;
     localStorage.removeItem("token");
     this.initInstance();

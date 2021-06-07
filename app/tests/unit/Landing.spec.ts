@@ -7,13 +7,20 @@ Vue.use(Vuex);
 
 describe("Landing", () => {
   let actions: any;
+  let state: any;
   let store: any;
   beforeEach(() => {
     actions = {
       register: jest.fn(),
       login: jest.fn(),
     };
+    state = {
+      client: {
+        hasToken: () => false,
+      },
+    };
     store = new Vuex.Store({
+      state,
       actions,
     });
   });

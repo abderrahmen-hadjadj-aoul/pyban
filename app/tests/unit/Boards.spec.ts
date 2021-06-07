@@ -21,8 +21,16 @@ describe("Boards", () => {
 
   it("should create a board", async () => {
     const name = "Board Name here";
+    const $route = {
+      params: {},
+    };
     store.state.boards = [{ name }];
-    const wrapper = mount(Boards, { store });
+    const wrapper = mount(Boards, {
+      store,
+      mocks: {
+        $route,
+      },
+    });
     const item = wrapper.find(".board-item");
     expect(item.exists()).toBe(true);
     expect(actions.getBoards).toHaveBeenCalled();

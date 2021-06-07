@@ -37,14 +37,16 @@ describe("Test boards", () => {
     cy.get("#create-board").click();
     cy.contains("article.board-item > h1", name).click();
     cy.contains("h2", name).should("be.visible");
+    // Create new column
+    cy.contains("button", "Add column").click();
     // Create new ticket with button
     const title = "Ticket title";
-    cy.get("#title-input").type(title);
+    cy.get("[data-column-index='0'] .ticket-title input").type(title);
     cy.get("#create-ticket").click();
     cy.get("li[data-index='0'] input").should("have.value", title);
     // Create new ticket with enter
     const title2 = "Ticket title for enter";
-    cy.get("#title-input").type(title2 + "{enter}");
+    cy.get("[data-column-index='0'] .ticket-title input").type(title2 + "{enter}");
     cy.get("li[data-index='1'] input").should("have.value", title2);
     // Delete
     cy.get("li[data-index='1']").dblclick();
@@ -62,9 +64,6 @@ describe("Test boards", () => {
     cy.wait(1000);
     // Check persistence
     cy.visit("/");
-    cy.get("#login-username").type(username);
-    cy.get("#login-password").type("test");
-    cy.get("#login").click();
     cy.get("[data-nav='nav-boards']").click();
     cy.contains("article.board-item > h1", name).click();
     cy.get("li[data-index='0'] input").should("have.value", newTitle);

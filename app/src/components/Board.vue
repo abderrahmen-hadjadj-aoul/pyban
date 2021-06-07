@@ -4,9 +4,15 @@
       {{ board.name }}
     </h2>
     <div class="columns">
-      <div class="column" v-for="column in board.columns_list" :key="column.id">
+      <div
+        class="column"
+        v-for="(column, column_index) in board.columns_list"
+        :key="column.id"
+        :data-column-index="column_index"
+      >
         <h3>
           <vs-input
+            class="column-title"
             v-model="column.title"
             placeholder="New ticket title"
             @change="updateColumn(column)"
@@ -24,6 +30,7 @@
         <div class="line">
           <vs-input
             v-model="column._new_ticket_title"
+            class="ticket-title"
             :id="'title-input-' + column.id"
             :ref="'title-input-' + column.id"
             placeholder="New ticket title"
@@ -150,9 +157,7 @@ export default class Board extends Vue {
   }
 
   async addTicket(column: ColumnModel): Promise<void> {
-    console.log("addTicket");
     const title = column._new_ticket_title;
-    console.log("title", title);
     const ticket = {
       title: title,
       description: "",
@@ -176,7 +181,6 @@ export default class Board extends Vue {
   }
 
   async changeTicketTitle(ticket: TicketModel): Promise<void> {
-    console.log("changeTicket", ticket);
     const payload = {
       id: ticket.id,
       patch: {
@@ -187,7 +191,6 @@ export default class Board extends Vue {
   }
 
   async changeTicket(ticket: TicketModel): Promise<void> {
-    console.log("changeTicket", ticket);
     const payload = {
       id: ticket.id,
       patch: {
@@ -199,12 +202,10 @@ export default class Board extends Vue {
   }
 
   async updateColumn(column: ColumnModel): Promise<void> {
-    console.log("updateColumn", column);
     this.$store.dispatch("updateColumn", column);
   }
 
   openTicketDetailDialog(ticket: TicketModel): void {
-    console.log("open ticket", ticket);
     this.ticket = ticket;
     this.ticketDetailDialogOpened = true;
   }
@@ -220,7 +221,6 @@ export default class Board extends Vue {
   }
 
   async addColumn(): Promise<void> {
-    console.log("addColumn");
     const payload = {
       board: this.board,
       column: {
@@ -235,7 +235,6 @@ export default class Board extends Vue {
   }
 
   onTicketChange(e: DragEvent, column: ColumnModel): void {
-    console.log("change", column, e);
     if (e.added) {
       const ticket = e.added.element;
       ticket.column = column.id;

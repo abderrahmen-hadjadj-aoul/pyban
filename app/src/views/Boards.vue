@@ -74,30 +74,24 @@ export default class Boards extends Vue {
     await this.$store.dispatch("getBoards");
     const board_id = this.$route.params.board_id;
     if (board_id) {
-      console.log("board id is defined", board_id);
-      console.log("board", this.$store.state.boards);
       const board = this.$store.state.boards.find(
         (board: BoardModel) => "" + board.id === board_id
       );
       if (board) {
-        console.log("board found", board);
         this.board = board;
       }
     }
   }
 
   openDialog(): void {
-    console.log("openDialog");
     this.dialogOpened = true;
   }
 
   closeDialog(): void {
-    console.log("closeDialog");
     this.dialogOpened = false;
   }
 
   async createBoard(): Promise<void> {
-    console.log("Create board");
     const loading = this.$vs.loading({
       target: this.$refs.createBoard,
       scale: "0.6",
@@ -109,7 +103,6 @@ export default class Boards extends Vue {
       const board = await this.$store.dispatch("createBoard", {
         name: this.boardName,
       });
-      console.log("board created", board);
     } catch (e) {
       console.error("create board error", e);
     }
