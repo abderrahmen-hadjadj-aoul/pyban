@@ -34,11 +34,25 @@ describe("Board", () => {
     const board = {
       name: "My board name",
       columns_list: [column],
+      getTickets() {
+        return [];
+      },
     };
     const propsData = {
       board,
     };
-    const wrapper = mount(Board, { propsData, store });
+    const $route = {
+      params: {},
+    };
+    const $router: string[] = [];
+    const wrapper = mount(Board, {
+      propsData,
+      store,
+      mocks: {
+        $route,
+        $router,
+      },
+    });
     // Check loading
     expect(actions.loadBoard).toHaveBeenCalled();
     // Check title

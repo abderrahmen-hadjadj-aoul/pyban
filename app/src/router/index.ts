@@ -33,12 +33,22 @@ const routes: Array<RouteConfig> = [
     component: MyTickets,
   },
   {
+    path: "/tickets/mine/:ticket_id",
+    name: "MyTickets",
+    component: MyTickets,
+  },
+  {
     path: "/boards",
     name: "Boards",
     component: Boards,
   },
   {
     path: "/boards/:board_id",
+    name: "Board",
+    component: Boards,
+  },
+  {
+    path: "/boards/:board_id/tickets/:ticket_id",
     name: "Board",
     component: Boards,
   },

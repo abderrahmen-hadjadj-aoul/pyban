@@ -88,37 +88,7 @@
       </div>
     </div>
 
-    <vs-dialog width="300px" not-center v-model="ticketDetailDialogOpened">
-      <template #header>
-        <h4 class="not-margin">Update ticket</h4>
-      </template>
-
-      <div class="con-content" v-if="ticket">
-        <vs-input
-          data-name="dialog-title"
-          v-model="ticket.title"
-          @change="changeTicketTitle(ticket)"
-          placeholder="Name"
-        ></vs-input>
-        <div class="description-container">
-          <textarea
-            data-name="dialog-description"
-            rows="7"
-            class="description"
-            v-model="ticket.description"
-            @change="changeTicket(ticket)"
-            placeholder="Description"
-          ></textarea>
-        </div>
-      </div>
-      <template #footer>
-        <div class="con-footer">
-          <vs-button id="delete-button" danger @click="deleteTicket(ticket)">
-            Delete
-          </vs-button>
-        </div>
-      </template>
-    </vs-dialog>
+    <Ticket :ticket="ticket" v-if="ticketDetailDialogOpened" @close="onClose" />
   </div>
 </template>
 
@@ -127,6 +97,7 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 import BoardModel from "@/lib/Board";
 import TicketModel from "@/lib/Ticket";
 import ColumnModel from "@/lib/Column";
+import Ticket from "@/components/Ticket";
 import draggable from "vuedraggable";
 
 interface DragOption {
@@ -143,7 +114,7 @@ interface DragEvent {
 }
 
 @Component({
-  components: { draggable },
+  components: { Ticket, draggable },
 })
 export default class Board extends Vue {
   @Prop({ default: null })
@@ -152,8 +123,17 @@ export default class Board extends Vue {
   ticket: TicketModel | null = null;
   drag = false;
 
-  mounted(): void {
-    this.$store.dispatch("loadBoard", this.board);
+  async mounted(): void {
+    await this.$store.dispatch("loadBoard", this.board);
+    const ticket_id = this.$route.params.ticket_id;
+    const tickets = this.board.getTickets();
+    if (ticket_id) {
+      console.log("has ticket_id", ticket_id);
+      const ticket = tickets.find((t) => "" + t.id === ticket_id);
+      console.log(tickets);
+      console.log("found ticket", ticket);
+      this.openTicketDetailDialog(ticket);
+    }
   }
 
   async addTicket(column: ColumnModel): Promise<void> {
@@ -208,16 +188,7 @@ export default class Board extends Vue {
   openTicketDetailDialog(ticket: TicketModel): void {
     this.ticket = ticket;
     this.ticketDetailDialogOpened = true;
-  }
-
-  closeTicketDetailDialog(): void {
-    this.ticket = null;
-    this.ticketDetailDialogOpened = false;
-  }
-
-  async deleteTicket(ticket: TicketModel): Promise<void> {
-    this.$store.dispatch("deleteTicket", ticket);
-    this.closeTicketDetailDialog();
+    this.$router.push(`/boards/${this.board.id}/tickets/${ticket.id}`);
   }
 
   async addColumn(): Promise<void> {
@@ -255,6 +226,11 @@ export default class Board extends Vue {
       disabled: false,
       ghostClass: "ghost",
     };
+  }
+
+  onClose(): void {
+    this.ticketDetailDialogOpened = false;
+    this.$router.push(`/boards/${this.board.id}`);
   }
 }
 </script>
@@ -314,22 +290,6 @@ li input {
 
 li:hover {
   background-color: #e6ecff;
-}
-
-.description-container {
-  width: 100%;
-  display: flex;
-}
-
-textarea {
-  flex: 1;
-  margin-top: 20px;
-  padding: 7px 13px;
-  color: rgb(44, 62, 80);
-  background-color: rgb(244, 247, 248);
-  border: none;
-  border-radius: 12px;
-  outline: none;
 }
 
 .add-column-container {

@@ -1,4 +1,5 @@
 import ColumnModel from "@/lib/Column";
+import TicketModel from "@/lib/Ticket";
 
 interface BoardCreate {
   id: number;
@@ -9,7 +10,6 @@ interface BoardCreate {
 export default class BoardModel {
   id: number;
   name: string;
-  _ticketsLoaded = false;
   columns: number[];
   columns_list: ColumnModel[];
   _columns_loaded = false;
@@ -21,7 +21,13 @@ export default class BoardModel {
     this.columns_list = [];
   }
 
-  setTicketsLoaded(value: boolean): void {
-    this._ticketsLoaded = value;
+  getTickets(): TicketModel[] {
+    const tickets: TicketModel[] = [];
+    this.columns_list.forEach((column) => {
+      column.tickets_list.forEach((ticket) => {
+        tickets.push(ticket);
+      });
+    });
+    return tickets;
   }
 }

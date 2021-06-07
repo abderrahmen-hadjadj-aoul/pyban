@@ -12,7 +12,11 @@
       <template #tbody>
         <vs-tr v-for="ticket in tickets" :key="ticket.id">
           <vs-td>
-            {{ ticket.title }}
+            <router-link :to="'/tickets/mine/' + ticket.id">
+              <div @click="openTicket(ticket)">
+                {{ ticket.title }}
+              </div>
+            </router-link>
           </vs-td>
           <vs-td>
             {{ ticket.board.name }}
@@ -26,23 +30,47 @@
         </vs-tr>
       </template>
     </vs-table>
+    <Ticket :ticket="ticket" v-if="ticket" @close="onClose" />
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import TicketModel from "@/lib/Ticket";
+import Ticket from "@/components/Ticket";
 
 @Component({
-  components: {},
+  components: { Ticket },
 })
 export default class MyTickets extends Vue {
   tickets: TicketModel[] = [];
+  ticket: TicketModel | null = null;
 
   async mounted(): Promise<void> {
     this.tickets = await this.$store.dispatch("getMyTickets");
+    const ticket_id = this.$route.params.ticket_id;
+    if (ticket_id) {
+      console.log("has ticket_id", ticket_id);
+      const ticket = this.tickets.find((t) => "" + t.id === ticket_id);
+      console.log(this.tickets);
+      console.log("found ticket", ticket);
+      this.openTicket(ticket);
+    }
+  }
+
+  openTicket(ticket: TicketModel): void {
+    this.ticket = ticket;
+  }
+
+  onClose(): void {
+    this.ticket = null;
+    this.$router.push("/tickets/mine");
   }
 }
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.ticket-title {
+  display: flex;
+}
+</style>
