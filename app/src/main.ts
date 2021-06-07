@@ -8,6 +8,11 @@ import "vuesax/dist/vuesax.css";
 import "boxicons";
 import "boxicons/css/boxicons.min.css";
 
+interface IPrototype {
+  /* eslint-disable */
+  prototype: any;
+}
+
 Vue.config.productionTip = false;
 Vue.config.devtools = true;
 

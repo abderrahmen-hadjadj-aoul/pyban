@@ -41,7 +41,6 @@ describe("Test general features", () => {
     cy.get("#login-username").type(username);
     cy.get("#login-password").type(password);
     cy.get("#login").click();
-    cy.contains("h1", "Home").should("be.visible");
   });
 
   it("Login wrong credentials", () => {

@@ -13,14 +13,14 @@ describe("Test boards", () => {
     cy.get("#login-username").type(username);
     cy.get("#login-password").type("test");
     cy.get("#login").click();
-    cy.get("[data-nav='nav-boards']").click();
+    //cy.get("[data-nav='nav-boards']").click();
     cy.get("#open-dialog").click();
     cy.get("#board-name").type(name);
     cy.get("#create-board").click();
     cy.contains("article.board-item > h1", name).should("be.visible");
   });
 
-  it.only("Create and update ticket", () => {
+  it("Create and update ticket", () => {
     const name = "Board name here - " + Date.now();
     cy.visit("/");
     const username = "test-" + Date.now();
@@ -31,7 +31,7 @@ describe("Test boards", () => {
     cy.get("#login-username").type(username);
     cy.get("#login-password").type("test");
     cy.get("#login").click();
-    cy.get("[data-nav='nav-boards']").click();
+    //cy.get("[data-nav='nav-boards']").click();
     cy.get("#open-dialog").click();
     cy.get("#board-name").type(name);
     cy.get("#create-board").click();
@@ -64,7 +64,7 @@ describe("Test boards", () => {
     cy.wait(1000);
     // Check persistence
     cy.visit("/");
-    cy.get("[data-nav='nav-boards']").click();
+    //cy.get("[data-nav='nav-boards']").click();
     cy.contains("article.board-item > h1", name).click();
     cy.get("li[data-index='0'] input").should("have.value", newTitle);
     cy.get("li[data-index='0']").dblclick();
