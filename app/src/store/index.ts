@@ -49,6 +49,14 @@ export default new Vuex.Store({
     setBoards(state, boards) {
       state.boards = boards.map((board: BoardModel) => new BoardModel(board));
     },
+    deleteBoard(state, board) {
+      const index = state.boards
+        .map((board_i: BoardModel) => board_i.id)
+        .indexOf(board.id);
+      if (index > -1) {
+        state.boards.splice(index, 1);
+      }
+    },
     // TICKETS
     addTicket(state, { column, ticket }) {
       console.log("add ticket", ticket);
@@ -177,6 +185,11 @@ export default new Vuex.Store({
         (column: ColumnModel) => new ColumnModel(column)
       );
       await context.dispatch("loadTickets", board);
+    },
+    async deleteBoard(context, board: BoardModel) {
+      console.log("deleteBoard", board);
+      await client.deleteBoard(board);
+      context.commit("deleteBoard", board);
     },
     // TICKET
     async loadTickets(context, board) {

@@ -1,8 +1,11 @@
 <template>
   <div class="board">
     <div class="buttons">
-      <vs-button id="open-dialog" icon @click="openDialog">
+      <vs-button id="open-dialog" icon @click="openDialog" v-if="!board">
         <i class="bx bx-plus"></i> Create board
+      </vs-button>
+      <vs-button icon border danger @click="deleteBoard" v-if="board">
+        <i class="bx bx-trash"></i> Delete this board
       </vs-button>
       <vs-button icon border @click="returnToBoardList" v-if="board">
         <i class="bx bx-left-arrow-alt"></i> Return to board list
@@ -10,14 +13,16 @@
     </div>
     <vs-dialog ref="dialog" width="300px" not-center v-model="dialogOpened">
       <template #header>
-        <h4 class="not-margin">Welcome what is the board <b>Name</b></h4>
+        <h4 class="not-margin">What is the board <b>Name</b></h4>
       </template>
 
       <div class="con-content">
         <vs-input
+          ref="boardNameInput"
           id="board-name"
           v-model="boardName"
           placeholder="Name"
+          @keypress.enter="createBoard"
         ></vs-input>
       </div>
 
@@ -85,6 +90,14 @@ export default class Boards extends Vue {
 
   openDialog(): void {
     this.dialogOpened = true;
+    this.$nextTick(() => {
+      const els = this.$refs["boardNameInput"].$el;
+      const input = els.getElementsByTagName("input")[0];
+      console.log("input", input);
+      setTimeout(() => {
+        input.focus();
+      }, 50);
+    });
   }
 
   closeDialog(): void {
@@ -122,6 +135,12 @@ export default class Boards extends Vue {
 
   returnToBoardList(): void {
     this.board = null;
+    this.$router.push("/boards");
+  }
+
+  deleteBoard(): void {
+    this.$store.dispatch("deleteBoard", this.board);
+    this.returnToBoardList();
   }
 }
 </script>

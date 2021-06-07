@@ -147,6 +147,17 @@ export default class Client {
     }
   }
 
+  async deleteBoard(board: BoardModel): Promise<AxiosResponse> {
+    try {
+      const res = await this.instance.delete("/tickets/boards/" + board.id);
+      return res;
+    } catch (e) {
+      console.error("deleteBoard error", e);
+      const data = e.response.data;
+      throw new Error(data.message);
+    }
+  }
+
   // TICKETS
 
   async getMyTickets(): Promise<AxiosResponse> {

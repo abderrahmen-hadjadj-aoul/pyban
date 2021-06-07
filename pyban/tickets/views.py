@@ -129,6 +129,20 @@ class BoardDetail(APIView):
             body = {"message": "Board does not exist"}
             return Response(body, status=status.HTTP_404_NOT_FOUND)
 
+    def delete(self, request, pk):
+        try:
+            board = Board.objects.get(pk=pk)
+            if request.user.canEdit(board):
+                board.delete()
+                serializer = BoardSerializer(board)
+                return Response(serializer.data)
+            else:
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
+        except Exception as e:
+            print(e)
+            body = {"message": e}
+            return Response(body, status=status.HTTP_404_NOT_FOUND)
+
 
 # TICKETS
 

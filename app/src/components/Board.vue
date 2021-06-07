@@ -266,6 +266,7 @@ export default class Board extends Vue {
 
 .column {
   width: 250px;
+  min-width: 250px;
   margin: 20px;
   padding: 10px;
   border-radius: 10px;
