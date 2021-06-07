@@ -129,6 +129,12 @@ interface DragOption {
   ghostClass: string;
 }
 
+interface DragEvent {
+  added: {
+    element: TicketModel;
+  };
+}
+
 @Component({
   components: { draggable },
 })
@@ -157,8 +163,9 @@ export default class Board extends Vue {
       ticket,
     };
     column._new_ticket_title = "";
+    const refs = this.$refs["add-" + column.id] as Element[];
     const loading = this.$vs.loading({
-      target: this.$refs["add-" + column.id][0],
+      target: refs[0],
       scale: "0.6",
       background: "primary",
       opacity: 1,
@@ -227,7 +234,7 @@ export default class Board extends Vue {
     this.$store.dispatch("deleteColumn", column);
   }
 
-  onTicketChange(e, column): void {
+  onTicketChange(e: DragEvent, column: ColumnModel): void {
     console.log("change", column, e);
     if (e.added) {
       const ticket = e.added.element;
@@ -262,8 +269,13 @@ export default class Board extends Vue {
   width: 250px;
   margin: 20px;
   padding: 10px;
-  border: 1px solid hsl(0, 0%, 85%);
   border-radius: 10px;
+  box-shadow: 5px 3px 10px hsl(0, 0%, 90%);
+  transition: 0.3s;
+}
+
+.column:hover {
+  box-shadow: 2px 2px 10px #9acfeb;
 }
 
 h3 {

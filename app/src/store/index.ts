@@ -209,6 +209,13 @@ export default new Vuex.Store({
       await client.deleteTicket(ticket);
       context.commit("deleteTicket", { ticket });
     },
+    async getMyTickets() {
+      const res = await client.getMyTickets();
+      const tickets = res.data.map(
+        (ticket: TicketModel) => new TicketModel(ticket)
+      );
+      return tickets;
+    },
     // COLUMNS
     async addColumn(context, payload: ColumnAddPayload) {
       console.log("addColumn in board", payload);

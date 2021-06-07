@@ -17,6 +17,13 @@ class TicketSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'description', 'column', 'board']
 
 
+class TicketDeepSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ticket
+        fields = ['id', 'title', 'description', 'column', 'board']
+        depth = 1
+
+
 class ColumnSerializer(serializers.ModelSerializer):
     class Meta:
         model = Column

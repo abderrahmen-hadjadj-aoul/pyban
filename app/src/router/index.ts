@@ -2,6 +2,8 @@ import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
 import Home from "../views/Home.vue";
 import Boards from "../views/Boards.vue";
+import MyTickets from "../views/MyTickets.vue";
+import MyAccount from "../views/MyAccount.vue";
 
 Vue.use(VueRouter);
 
@@ -19,6 +21,16 @@ const routes: Array<RouteConfig> = [
     // which is lazy-loaded when the route is visited.
     component: () =>
       import(/* webpackChunkName: "about" */ "../views/About.vue"),
+  },
+  {
+    path: "/my-account",
+    name: "MyAccount",
+    component: MyAccount,
+  },
+  {
+    path: "/tickets/mine",
+    name: "MyTickets",
+    component: MyTickets,
   },
   {
     path: "/boards",

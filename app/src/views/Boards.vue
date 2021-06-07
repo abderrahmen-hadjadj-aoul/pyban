@@ -1,6 +1,5 @@
 <template>
   <div class="board">
-    <h1>Boards</h1>
     <div class="buttons">
       <vs-button id="open-dialog" icon @click="openDialog">
         <i class="bx bx-plus"></i> Create board
@@ -141,6 +140,7 @@ export default class Boards extends Vue {
 >>> .vs-input-parent {
   width: 100%;
 }
+
 .con-footer {
   display: flex;
   align-items: center;
@@ -149,7 +149,7 @@ export default class Boards extends Vue {
 
 .buttons {
   display: flex;
-  margin-bottom: 30px;
+  margin-bottom: 10px;
 }
 
 main.board-container {

@@ -8,7 +8,7 @@ from django.db import IntegrityError
 from django.contrib.auth import authenticate, login
 from rest_framework import status
 from .models import Board, Ticket, Column
-from .serializers import BoardSerializer, TicketSerializer, ColumnSerializer
+from .serializers import BoardSerializer, TicketSerializer, TicketDeepSerializer, ColumnSerializer
 
 User = get_user_model()
 
@@ -141,11 +141,15 @@ class TicketList(APIView):
 
     def get(self, request, format=None):
         boardid = request.query_params.get("boardid")
-        board = Board.objects.get(pk=boardid)
-        if not request.user.canView(board):
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-        tickets = Ticket.objects.filter(board=board)
-        serializer = TicketSerializer(tickets, many=True)
+        if boardid:
+            board = Board.objects.get(pk=boardid)
+            if not request.user.canView(board):
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
+            tickets = Ticket.objects.filter(board=board)
+            serializer = TicketSerializer(tickets, many=True)
+        else:
+            tickets = Ticket.objects.filter(board__owner=request.user)
+            serializer = TicketDeepSerializer(tickets, many=True)
         return Response(serializer.data)
 
     def post(self, request, format=None):

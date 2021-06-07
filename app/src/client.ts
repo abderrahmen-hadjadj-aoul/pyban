@@ -143,6 +143,16 @@ export default class Client {
 
   // TICKETS
 
+  async getMyTickets(): Promise<AxiosResponse> {
+    try {
+      const res = await this.instance.get("/tickets/tickets");
+      return res;
+    } catch (e) {
+      const data = e.response.data;
+      throw new Error(data.message);
+    }
+  }
+
   async loadTickets(board: BoardModel): Promise<AxiosResponse> {
     try {
       const res = await this.instance.get(
