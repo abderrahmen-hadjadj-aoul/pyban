@@ -24,7 +24,7 @@ SECRET_KEY = '1p@ry+9$78z1ny6e17*u&t!ybx9*x&x4=tm@azcf@o5u=rw8sz'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "pyban.hadjadjaoul.com"]
 
 # Application definition
 
